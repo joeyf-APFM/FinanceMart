@@ -1,0 +1,8 @@
+# Local agent guidance
+CLAUDE.md
+
+# macOS
+.DS_Store
+
+# Python virtual environment
+.venv/

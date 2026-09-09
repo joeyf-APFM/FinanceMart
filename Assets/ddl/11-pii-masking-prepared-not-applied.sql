@@ -1,0 +1,175 @@
+-- =====================================================================
+-- Finance Catalog — 11 — PII masking: PREPARED, NOT APPLIED
+--
+-- STATUS: NOT EXECUTED, AND NOT INTENDED TO BE — YET.
+--
+-- The initial plan records the decision plainly: masking is pushed to a
+-- further phase because all folks who will access this data have rights to
+-- see the PII. That decision is not being reopened here. This file exists so
+-- that reversing it later is an afternoon rather than a project.
+--
+-- EVERY STATEMENT BELOW IS COMMENTED OUT. Nothing in this file changes
+-- behaviour if it is run as-is. The function definitions are live-looking
+-- but commented too, because a mask function sitting in finance.identity is
+-- one ALTER away from being applied by someone who did not read this header.
+--
+-- THREE THINGS TO KNOW BEFORE UNCOMMENTING ANYTHING
+--
+-- 1. MASKS BREAK ENTITY MATCHING. The vault already records this: column
+--    masks on RM00101 disable entity matching. A Genie agent tuned against
+--    an unmasked dim_customer stops resolving customers by name the day a
+--    mask lands, and the failure looks like the agent got worse rather than
+--    like a governance change. If a Genie agent is in production when
+--    masking is applied, it must be re-tuned as part of the same change.
+--
+-- 2. APPLYING A MASK CHANGES EXISTING RESULTS SILENTLY. A dashboard that
+--    grouped by customer_name keeps working and starts grouping by the mask
+--    value. No error, no warning, a plausible-looking chart. Inventory the
+--    consumers of finance.identity before applying, the same way file 03
+--    requires inventorying the nine consumers of main.prod.dim_date.
+--
+-- 3. VERIFY THE VIEW BEHAVIOUR RATHER THAN ASSUMING IT. Whether a mask on a
+--    base table is enforced for someone reading through a view, and whose
+--    group membership is evaluated, depends on the view''s owner and the
+--    workspace configuration. Test it in `attivita` with a genuinely
+--    non-privileged principal before relying on it in production. Do not
+--    infer it from this comment.
+--
+-- THE ALTERNATIVE THAT COSTS LESS: the grant in file 10 already restricts
+-- finance.identity to `finance-pii-readers`. Narrowing group MEMBERSHIP is
+-- reversible in one place and breaks nothing. Reach for that first; masking
+-- is for when PII-bearing tables must be readable by people who should not
+-- see the PII, which is not today's situation.
+-- =====================================================================
+
+-- ---------------------------------------------------------------------
+-- Mask functions
+-- ---------------------------------------------------------------------
+-- Defined in finance.identity so they live beside what they protect and are
+-- covered by the same grants. A mask function in a widely-readable schema is
+-- a hint about what is sensitive.
+--
+-- is_account_group_member() evaluates the CURRENT QUERYING USER'S group
+-- membership at query time, which is what makes one table serve both
+-- audiences. The group name must match file 10 exactly.
+
+-- CREATE OR REPLACE FUNCTION finance.identity.mask_redact(col STRING)
+-- RETURNS STRING
+-- COMMENT 'Full redaction. Returns the value unchanged for finance-pii-readers, the literal REDACTED otherwise. Use where the value has no analytic use to a non-privileged reader — names, street addresses, bank details.'
+-- RETURN CASE WHEN is_account_group_member('finance-pii-readers') THEN col
+--             WHEN col IS NULL THEN NULL
+--             ELSE 'REDACTED' END;
+
+-- CREATE OR REPLACE FUNCTION finance.identity.mask_hash(col STRING)
+-- RETURNS STRING
+-- COMMENT 'Pseudonymisation. Returns the value unchanged for finance-pii-readers, a stable hash otherwise. Use where a non-privileged reader must still be able to GROUP BY or COUNT DISTINCT the value without seeing it. Not anonymisation: a hash of a short, guessable value is reversible by anyone who can enumerate the domain.'
+-- RETURN CASE WHEN is_account_group_member('finance-pii-readers') THEN col
+--             WHEN col IS NULL THEN NULL
+--             ELSE sha2(concat('finance-identity-v1:', col), 256) END;
+
+-- CREATE OR REPLACE FUNCTION finance.identity.mask_last4(col STRING)
+-- RETURNS STRING
+-- COMMENT 'Partial reveal, last four characters. Returns the value unchanged for finance-pii-readers. Use only where the last four are genuinely needed to reconcile against a document, and never on a value short enough that four characters is most of it.'
+-- RETURN CASE WHEN is_account_group_member('finance-pii-readers') THEN col
+--             WHEN col IS NULL THEN NULL
+--             WHEN length(trim(col)) <= 4 THEN 'REDACTED'
+--             ELSE concat('****', right(trim(col), 4)) END;
+
+-- ---------------------------------------------------------------------
+-- finance.identity.dim_customer
+-- ---------------------------------------------------------------------
+-- Grouped by choice of mask, because the choice is the decision. Redaction
+-- versus hashing is not a style preference — hashing preserves the ability
+-- to count distinct customers without seeing who they are, and redaction
+-- does not.
+
+-- Names. mask_hash rather than mask_redact so that a non-privileged reader
+-- can still count distinct customers and detect duplicates, which is a real
+-- analytic need that redaction destroys.
+-- ALTER TABLE finance.identity.dim_customer ALTER COLUMN customer_name  SET MASK finance.identity.mask_hash;
+-- ALTER TABLE finance.identity.dim_customer ALTER COLUMN statement_name SET MASK finance.identity.mask_hash;
+-- ALTER TABLE finance.identity.dim_customer ALTER COLUMN short_name     SET MASK finance.identity.mask_hash;
+
+-- A named individual. Full redaction — there is no aggregate use for a
+-- contact person's name that justifies keeping it groupable.
+-- ALTER TABLE finance.identity.dim_customer ALTER COLUMN contact_person SET MASK finance.identity.mask_redact;
+
+-- Street address. Redact the lines, LEAVE city, state, postal code and
+-- country unmasked: geography at that grain is legitimately analytic and
+-- masking it would break every regional report for no privacy gain.
+-- ALTER TABLE finance.identity.dim_customer ALTER COLUMN address_line_1 SET MASK finance.identity.mask_redact;
+-- ALTER TABLE finance.identity.dim_customer ALTER COLUMN address_line_2 SET MASK finance.identity.mask_redact;
+-- ALTER TABLE finance.identity.dim_customer ALTER COLUMN address_line_3 SET MASK finance.identity.mask_redact;
+
+-- Contact numbers. Last four, because reconciling a call record or a
+-- remittance advice against a phone number is a real task.
+-- ALTER TABLE finance.identity.dim_customer ALTER COLUMN phone_1 SET MASK finance.identity.mask_last4;
+-- ALTER TABLE finance.identity.dim_customer ALTER COLUMN phone_2 SET MASK finance.identity.mask_last4;
+-- ALTER TABLE finance.identity.dim_customer ALTER COLUMN fax     SET MASK finance.identity.mask_last4;
+
+-- Financial identifiers. These are the FIRST columns to mask if masking is
+-- applied incrementally rather than all at once — bank name and branch plus
+-- a customer name is enough to be a problem on its own, and a tax
+-- registration number is a regulated identifier in most jurisdictions APFM
+-- operates in.
+-- ALTER TABLE finance.identity.dim_customer ALTER COLUMN bank_name               SET MASK finance.identity.mask_redact;
+-- ALTER TABLE finance.identity.dim_customer ALTER COLUMN bank_branch             SET MASK finance.identity.mask_redact;
+-- ALTER TABLE finance.identity.dim_customer ALTER COLUMN tax_registration_number SET MASK finance.identity.mask_redact;
+
+-- User-defined fields. NOT masked here, and that is a gap rather than a
+-- decision: RM00101.USERDEF1 and USERDEF2 are free text whose contents
+-- nobody has confirmed. Free text is where PII ends up when there is nowhere
+-- else to put it. PROFILE THEM before deciding, and until then treat them as
+-- potentially PII-bearing regardless of what this file says.
+-- ALTER TABLE finance.identity.dim_customer ALTER COLUMN user_defined_1 SET MASK finance.identity.mask_redact;
+-- ALTER TABLE finance.identity.dim_customer ALTER COLUMN user_defined_2 SET MASK finance.identity.mask_redact;
+
+-- ---------------------------------------------------------------------
+-- finance.billing.fact_invoice_line
+-- ---------------------------------------------------------------------
+-- ship_to_name is the one PII column that escapes finance.identity. It sits
+-- in a fact table in a widely-granted schema, which means the schema-level
+-- isolation in file 10 does NOT protect it. If masking is applied anywhere,
+-- apply it here — this is the column most likely to be forgotten and the
+-- only one where the grant is not already a backstop.
+--
+-- The mask function lives in finance.identity, so the reader needs USE
+-- SCHEMA on finance.identity to resolve it. Confirm that a finance-analysts
+-- member can still query fact_invoice_line after this is applied; if not,
+-- the function has to move to a schema they can traverse.
+-- ALTER TABLE finance.billing.fact_invoice_line ALTER COLUMN ship_to_name SET MASK finance.identity.mask_redact;
+
+-- ---------------------------------------------------------------------
+-- finance.reference.dim_gp_user
+-- ---------------------------------------------------------------------
+-- user_name is an employee name, not customer PII, and it is the whole point
+-- of the dimension: it resolves LASTUSER and PSTUSRID into something a human
+-- can read. Masking it would defeat the table. NOT PROPOSED — listed here so
+-- the omission is visibly deliberate rather than an oversight.
+--
+-- What matters for this table is already done: SY01400.PASSWORD is not
+-- carried at all. Exclusion beats masking whenever the column has no use.
+
+-- ---------------------------------------------------------------------
+-- Removing a mask
+-- ---------------------------------------------------------------------
+-- Included because a rollback path that has never been written down is not a
+-- rollback path.
+--
+-- ALTER TABLE finance.identity.dim_customer ALTER COLUMN customer_name DROP MASK;
+
+-- ---------------------------------------------------------------------
+-- Verifying that a mask does what it claims
+-- ---------------------------------------------------------------------
+-- Checking as yourself proves nothing if you are in finance-pii-readers.
+-- Test in `attivita` with a service principal that is NOT a member, then
+-- promote. Two checks, both necessary:
+--
+--   1. Direct read of the base table returns masked values.
+--   2. Read THROUGH each downstream view and mart returns masked values.
+--      This is the one that surprises people — see note 3 in the header.
+--
+-- Current mask assignments, for auditing what is actually applied:
+-- SELECT table_schema, table_name, column_name, mask_name
+-- FROM   system.information_schema.column_masks
+-- WHERE  table_catalog = 'finance';
