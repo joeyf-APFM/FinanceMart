@@ -10,7 +10,7 @@ updated: 2026-09-09
 # common.calendar.dim_fiscal_calendar
 
 > [!warning] Not built
-> DDL: [[../ddl/03-common-calendar.sql|03-common-calendar.sql]] · `STATUS: NOT EXECUTED`. See [[Table Specifications]].
+> DDL: [03-common-calendar.sql](../ddl/03-common-calendar.sql) · `STATUS: NOT EXECUTED`. See [Table Specifications](Table%20Specifications.md).
 
 | | |
 |---|---|
@@ -26,7 +26,7 @@ updated: 2026-09-09
 
 `SY40100` and `SY40101` mostly close the sourcing gap the vault previously recorded for a fiscal calendar. They supply period boundaries, period names, fiscal-year start and end, the number of periods in a year, and the historical-year flag.
 
-**Close state is deliberately absent from this table.** GP grains period close on period **× series**, so a single close flag per period would be silently wrong for whoever cares about the other series. Close state lives in [[snap_period_close_daily]]. This is the correction the design makes to an earlier vault claim, and it is the reason this dimension is period-grained and stays that way.
+**Close state is deliberately absent from this table.** GP grains period close on period **× series**, so a single close flag per period would be silently wrong for whoever cares about the other series. Close state lives in [snap_period_close_daily](snap_period_close_daily.md). This is the correction the design makes to an earlier vault claim, and it is the reason this dimension is period-grained and stays that way.
 
 ## Columns
 
@@ -68,14 +68,14 @@ updated: 2026-09-09
 
 | Join to | On | Cardinality | Notes |
 |---|---|---|---|
-| [[dim_date]] | `dd.fiscal_period_key = dfc.fiscal_period_key` | 1:N | **Filter `period_level = 'period'`** |
-| [[snap_period_close_daily]] | `s.fiscal_period_key = dfc.fiscal_period_key` | 1:N | The snapshot's own grain includes `series_id`; see the fan-out warning on that note |
-| [[fact_gl_posting]] | `f.fiscal_period_key = dfc.fiscal_period_key` | 1:N | Filter `period_level = 'period'`. Note the fact carries **both** `fiscal_period_key` and `date_key`, deliberately separate — the period an amount is recognised in is not always the period its transaction date falls in |
-| [[fact_ar_transaction]] | `f.fiscal_period_key = dfc.fiscal_period_key` | 1:N | Built on `gl_post_date`, not `document_date` |
-| [[fact_ar_apply]], [[mart_writeoff]] | `f.fiscal_period_key = dfc.fiscal_period_key` | 1:N | Both on `gl_post_date` |
-| [[fact_plan_amount]], [[fact_plan_adjustment]], [[mart_plan_vs_actual]] | `f.fiscal_period_key = dfc.fiscal_period_key` | 1:N | |
-| [[mart_billing_by_stream]] | `m.fiscal_period_key = dfc.fiscal_period_key` | 1:N | `fiscal_period_key` is the leading column of that mart's PK |
-| [[mart_account_period_activity]], [[mart_period_summary]] | `m.fiscal_period_key = dfc.fiscal_period_key` | 1:N | |
+| [dim_date](dim_date.md) | `dd.fiscal_period_key = dfc.fiscal_period_key` | 1:N | **Filter `period_level = 'period'`** |
+| [snap_period_close_daily](snap_period_close_daily.md) | `s.fiscal_period_key = dfc.fiscal_period_key` | 1:N | The snapshot's own grain includes `series_id`; see the fan-out warning on that note |
+| [fact_gl_posting](fact_gl_posting.md) | `f.fiscal_period_key = dfc.fiscal_period_key` | 1:N | Filter `period_level = 'period'`. Note the fact carries **both** `fiscal_period_key` and `date_key`, deliberately separate — the period an amount is recognised in is not always the period its transaction date falls in |
+| [fact_ar_transaction](fact_ar_transaction.md) | `f.fiscal_period_key = dfc.fiscal_period_key` | 1:N | Built on `gl_post_date`, not `document_date` |
+| [fact_ar_apply](fact_ar_apply.md), [mart_writeoff](mart_writeoff.md) | `f.fiscal_period_key = dfc.fiscal_period_key` | 1:N | Both on `gl_post_date` |
+| [fact_plan_amount](fact_plan_amount.md), [fact_plan_adjustment](fact_plan_adjustment.md), [mart_plan_vs_actual](mart_plan_vs_actual.md) | `f.fiscal_period_key = dfc.fiscal_period_key` | 1:N | |
+| [mart_billing_by_stream](mart_billing_by_stream.md) | `m.fiscal_period_key = dfc.fiscal_period_key` | 1:N | `fiscal_period_key` is the leading column of that mart's PK |
+| [mart_account_period_activity](mart_account_period_activity.md), [mart_period_summary](mart_period_summary.md) | `m.fiscal_period_key = dfc.fiscal_period_key` | 1:N | |
 
 ### The one join that is always wrong
 
@@ -83,6 +83,6 @@ updated: 2026-09-09
 
 ## Gotchas
 
-- **Period 0 is real.** It carries beginning-balance-forward. Do not filter it as invalid; filter it deliberately using the BBF flags on [[fact_gl_posting]].
+- **Period 0 is real.** It carries beginning-balance-forward. Do not filter it as invalid; filter it deliberately using the BBF flags on [fact_gl_posting](fact_gl_posting.md).
 - **`periods_in_year` may not be 12.** Read it.
 - **`is_derived_level` distinguishes GP truth from this pipeline's rollup.** Anything reconciled back to GP must filter to `is_derived_level = false`.

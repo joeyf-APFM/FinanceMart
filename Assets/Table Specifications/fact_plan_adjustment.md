@@ -15,7 +15,7 @@ updated: 2026-09-09
 > `REFRENCE` is misspelled in GP too, and is likewise left alone.
 
 > [!warning] Not built
-> DDL: [[../ddl/09-finance-plan.sql|09-finance-plan.sql]] · `STATUS: NOT EXECUTED`. See [[Table Specifications]].
+> DDL: [09-finance-plan.sql](../ddl/09-finance-plan.sql) · `STATUS: NOT EXECUTED`. See [Table Specifications](Table%20Specifications.md).
 
 | | |
 |---|---|
@@ -26,11 +26,11 @@ updated: 2026-09-09
 | **Clustering** | `CLUSTER BY (legal_entity_code, fiscal_year, budget_id)` |
 | **Readers** | `finance-analysts` |
 
-## Why this unions and [[fact_gl_posting]] does not
+## Why this unions and [fact_gl_posting](fact_gl_posting.md) does not
 
 The asymmetry is deliberate and the reason is stated in the DDL:
 
-> [[fact_gl_posting]] and [[fact_gl_posting_work]] are separate **because their measure classes differ** — recognised versus not recognised — and mixing them would let unposted amounts into a recognised total. **A plan adjustment is not a recognised measure either way, so the risk does not exist and the convenience of one table wins.**
+> [fact_gl_posting](fact_gl_posting.md) and [fact_gl_posting_work](fact_gl_posting_work.md) are separate **because their measure classes differ** — recognised versus not recognised — and mixing them would let unposted amounts into a recognised total. **A plan adjustment is not a recognised measure either way, so the risk does not exist and the convenience of one table wins.**
 
 The cost of that convenience is that `is_posted` must be filtered deliberately, which is why the column comment says so and why it is in the surrogate-key derivation.
 
@@ -43,21 +43,21 @@ The cost of that convenience is that `is_posted` must be filtered deliberately, 
 | `journal_entry_number` | BIGINT | No | `GL32000.JRNENTRY` / `GL12000.JRNENTRY` | **Company-scoped, and reused across years in GP — never treat it as globally unique** |
 | `batch_number` | STRING | Yes | `GL12000.BACHNUMB` / `GL12001.BACHNUMB` | **Unposted only.** `GL32000` does not carry it |
 | `batch_source` | STRING | Yes | `GL12000.BCHSOURC` | **Unposted only** |
-| `budget_id` | STRING | No | `GL32000.BUDGETID` | In the grain, as on [[fact_plan_amount]] |
+| `budget_id` | STRING | No | `GL32000.BUDGETID` | In the grain, as on [fact_plan_amount](fact_plan_amount.md) |
 | `fiscal_year` | INT | No | `GL32000.YEAR1` | |
 | `period_number` | INT | No | `GL32000.PERIODID` | |
 | `period_date` | DATE | Yes | `GL32000.PERIODDT` | |
-| `fiscal_period_key` | BIGINT | Yes | Derived | FK to [[dim_fiscal_calendar]] |
+| `fiscal_period_key` | BIGINT | Yes | Derived | FK to [dim_fiscal_calendar](dim_fiscal_calendar.md) |
 | `account_index` | INT | No | `GL32000.ACTINDX` | Company-scoped |
-| `gl_account_key` | BIGINT | Yes | Derived | FK to [[dim_gl_account]] |
+| `gl_account_key` | BIGINT | Yes | Derived | FK to [dim_gl_account](dim_gl_account.md) |
 | `transaction_date` | DATE | Yes | `GL32000.TRXDATE` / `GL12000.TRXDATE` | |
-| `date_key` | INT | Yes | Derived on `transaction_date` | FK to [[dim_date]] |
+| `date_key` | INT | Yes | Derived on `transaction_date` | FK to [dim_date](dim_date.md) |
 | `budget_amount` | DECIMAL(19,5) | Yes | `GL32000.BUDGETAMT` / `GL12001.BUDGETAMT` | **The resulting budget amount — the LEVEL** |
 | `adjustment_amount` | DECIMAL(19,5) | Yes | **`GL32000.BudgerAdjustment` / `GL12001.BudgerAdjustment`** | **The DELTA.** *"Summing the two together double counts"* |
 | `reference` | STRING | Yes | `GL32000.REFRENCE` | **GP's own misspelling of reference** |
 | `source_document` | STRING | Yes | `GL32000.SOURCDOC` | |
 | `trx_source` | STRING | Yes | `GL32000.TRXSORCE` | |
-| `posted_by_user_id` | STRING | Yes | `GL32000.USWHPSTD` / `GL12000.USWHPSTD` | **Resolve through [[dim_gp_user]] rather than reading `sy01400`** |
+| `posted_by_user_id` | STRING | Yes | `GL32000.USWHPSTD` / `GL12000.USWHPSTD` | **Resolve through [dim_gp_user](dim_gp_user.md) rather than reading `sy01400`** |
 | `last_user_id` | STRING | Yes | `GL12000.LASTUSER` | **Unposted only** |
 | `posting_status` | INT | Yes | `GL12000.PSTGSTUS` | **Unposted only** |
 | `error_state` | INT | Yes | `GL12000.ERRSTATE` | **Unposted only, and usually the answer to why an adjustment has not posted.** Header detail in `GLHDRVAL` / `GLHDRMSG` / `GLHDRMS2`, line detail in `GL12001.GLLINVAL` |
@@ -68,7 +68,7 @@ The cost of that convenience is that `is_posted` must be filtered deliberately, 
 | `source_table` | STRING | No | Literal | The guarded-layer table the row came from |
 | `_loaded_at` | TIMESTAMP | No | Pipeline | |
 
-**Constraints:** `pk_fact_plan_adjustment PRIMARY KEY (plan_adjustment_key)`; `fk_plan_adj_account` → `dim_gl_account`; `fk_plan_adj_period` → `common.calendar.dim_fiscal_calendar`. **No `legal_entity_key` and no FK to [[dim_legal_entity]]** — unlike [[fact_plan_amount]]. Join on `legal_entity_code`.
+**Constraints:** `pk_fact_plan_adjustment PRIMARY KEY (plan_adjustment_key)`; `fk_plan_adj_account` → `dim_gl_account`; `fk_plan_adj_period` → `common.calendar.dim_fiscal_calendar`. **No `legal_entity_key` and no FK to [dim_legal_entity](dim_legal_entity.md)** — unlike [fact_plan_amount](fact_plan_amount.md). Join on `legal_entity_code`.
 
 ## Table tags
 
@@ -83,14 +83,14 @@ The cost of that convenience is that `is_posted` must be filtered deliberately, 
 
 | Join to | On | Cardinality | Notes |
 |---|---|---|---|
-| [[dim_gl_account]] | `a.gl_account_key = adj.gl_account_key` | N:1 | Declared FK |
-| [[dim_fiscal_calendar]] | `dfc.fiscal_period_key = adj.fiscal_period_key` | N:1 | Declared FK. Filter `period_level = 'period'` |
-| [[dim_date]] | `d.date_key = adj.date_key` | N:1 | **No declared FK.** On `transaction_date` |
-| [[fact_plan_amount]] | `(legal_entity_code, budget_id, fiscal_year, period_number, account_index)` | N:1 | **No FK.** Natural-key join, all five parts, `trim()` the strings |
-| [[dim_gp_user]] | `trim(u.user_id) = trim(adj.posted_by_user_id)` | N:1 | **Trim both sides** — GP `char` columns are space-padded |
-| [[dim_legal_entity]] | `le.legal_entity_code = adj.legal_entity_code` | N:1 | **No surrogate on this table** |
-| [[mart_plan_vs_actual]] | This fact is its `plan_adjustment_amount` source | — | **Posted rows only** |
-| [[fact_gl_posting]] | **Do not join to compare** | — | Different measure classes. A plan adjustment is not an actual |
+| [dim_gl_account](dim_gl_account.md) | `a.gl_account_key = adj.gl_account_key` | N:1 | Declared FK |
+| [dim_fiscal_calendar](dim_fiscal_calendar.md) | `dfc.fiscal_period_key = adj.fiscal_period_key` | N:1 | Declared FK. Filter `period_level = 'period'` |
+| [dim_date](dim_date.md) | `d.date_key = adj.date_key` | N:1 | **No declared FK.** On `transaction_date` |
+| [fact_plan_amount](fact_plan_amount.md) | `(legal_entity_code, budget_id, fiscal_year, period_number, account_index)` | N:1 | **No FK.** Natural-key join, all five parts, `trim()` the strings |
+| [dim_gp_user](dim_gp_user.md) | `trim(u.user_id) = trim(adj.posted_by_user_id)` | N:1 | **Trim both sides** — GP `char` columns are space-padded |
+| [dim_legal_entity](dim_legal_entity.md) | `le.legal_entity_code = adj.legal_entity_code` | N:1 | **No surrogate on this table** |
+| [mart_plan_vs_actual](mart_plan_vs_actual.md) | This fact is its `plan_adjustment_amount` source | — | **Posted rows only** |
+| [fact_gl_posting](fact_gl_posting.md) | **Do not join to compare** | — | Different measure classes. A plan adjustment is not an actual |
 
 ### `is_posted` in every query
 
@@ -144,7 +144,7 @@ LEFT JOIN finance.plan.fact_plan_adjustment a
 GROUP BY 1, 2
 ```
 
-**`a.is_posted` must be in the `ON` clause.** In the `WHERE` it converts the `LEFT JOIN` to an inner one and drops every account that has never been adjusted — i.e. most of the plan. Same failure mode as the as-of predicate on [[fact_ar_apply]].
+**`a.is_posted` must be in the `ON` clause.** In the `WHERE` it converts the `LEFT JOIN` to an inner one and drops every account that has never been adjusted — i.e. most of the plan. Same failure mode as the as-of predicate on [fact_ar_apply](fact_ar_apply.md).
 
 `fact_plan_amount.budget_amount` is already the plan **after** posted adjustments, so this is a subtraction, not an addition.
 
@@ -166,6 +166,6 @@ The validation columns exist for exactly this query. They are **null by construc
 - **Seven columns are unposted-only** (`batch_number`, `batch_source`, `last_user_id`, `posting_status`, `error_state`, `header_validation_message`, `line_validation_code`). Their nulls on posted rows are structural, not data quality. A completeness check that flags them will flag every posted row.
 - **`journal_entry_number` is company-scoped and reused across years.** Any join or dedupe on it alone will silently merge unrelated adjustments across entities and years.
 - **The GP column is `BudgerAdjustment` and the reference column is `REFRENCE`.** Both misspellings are load-bearing.
-- **No `_source_synced_at`** on this table, unlike [[fact_plan_amount]]. Provenance is `source_table` plus `_loaded_at`.
+- **No `_source_synced_at`** on this table, unlike [fact_plan_amount](fact_plan_amount.md). Provenance is `source_table` plus `_loaded_at`.
 - **No currency.** Plan and its adjustments are functional currency by implication.
 - **An unposted adjustment and the posted row it becomes both exist** for as long as the replica carries them. That is the intent — but it means `count(*)` of adjustments is not a count of distinct adjustments unless `is_posted` is pinned.

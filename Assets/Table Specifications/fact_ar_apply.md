@@ -13,7 +13,7 @@ updated: 2026-09-09
 > It is also what makes write-off reporting servable **today**: `WROFAMNT` with a date, no new ingestion required. The stated pain point — write-offs and bad-debt recovery invisible to CAMs and Community Ops — needs **this fact and a grant**.
 
 > [!warning] Not built
-> DDL: [[../ddl/07-finance-receivables.sql|07-finance-receivables.sql]] · `STATUS: NOT EXECUTED`. See [[Table Specifications]].
+> DDL: [07-finance-receivables.sql](../ddl/07-finance-receivables.sql) · `STATUS: NOT EXECUTED`. See [Table Specifications](Table%20Specifications.md).
 
 | | |
 |---|---|
@@ -30,7 +30,7 @@ updated: 2026-09-09
 |---|---|---|---|---|
 | `ar_apply_key` | BIGINT | No | Derived | PK. `xxhash64(legal_entity_code, gp_customer_number, apply_from_document_number, apply_from_document_type, apply_to_document_number, apply_to_document_type, apply_date, apply_time)`. **GP permits multiple partial applies between the same two documents — which is why date and time are in the key.** T-08 |
 | `legal_entity_code` | STRING | No | Derived | |
-| `customer_key` | BIGINT | Yes | Derived | FK to [[dim_customer]] |
+| `customer_key` | BIGINT | Yes | Derived | FK to [dim_customer](dim_customer.md) |
 | `gp_customer_number` | STRING | No | `CUSTNMBR` | Trimmed |
 | `apply_from_document_number` | STRING | Yes | `APFRDCNM` | **The document doing the applying** — typically a payment or credit memo |
 | `apply_from_document_type` | INT | Yes | `APFRDCTY` | |
@@ -40,12 +40,12 @@ updated: 2026-09-09
 | `apply_to_document_type` | INT | Yes | `APTODCTY` | |
 | `apply_to_document_date` | DATE | Yes | `APTODCDT` | |
 | `apply_to_gl_post_date` | DATE | Yes | `ApplyToGLPostDate` | With `apply_date`, **what makes as-of aging reconstructable** |
-| `apply_to_transaction_key` | BIGINT | Yes | Derived | FK to [[fact_ar_transaction]], on the **apply-to** document. **The join that turns the apply trail into an aging history** |
+| `apply_to_transaction_key` | BIGINT | Yes | Derived | FK to [fact_ar_transaction](fact_ar_transaction.md), on the **apply-to** document. **The join that turns the apply trail into an aging history** |
 | `apply_date` | DATE | Yes | `DATE1` | The date the apply was recorded |
 | `apply_time` | TIMESTAMP | Yes | `TIME1` | **GP stores date and time separately**, and both are needed because several applies can share a date |
 | `gl_post_date` | DATE | Yes | `GLPOSTDT` | |
-| `date_key` | INT | Yes | Derived on `apply_date` | FK to [[dim_date]] |
-| `fiscal_period_key` | BIGINT | Yes | Derived on `gl_post_date` | FK to [[dim_fiscal_calendar]] |
+| `date_key` | INT | Yes | Derived on `apply_date` | FK to [dim_date](dim_date.md) |
+| `fiscal_period_key` | BIGINT | Yes | Derived on `gl_post_date` | FK to [dim_fiscal_calendar](dim_fiscal_calendar.md) |
 | `applied_amount` | DECIMAL(19,5) | Yes | `APPTOAMT` | **The as-of aging subtrahend** |
 | `discount_taken_amount` | DECIMAL(19,5) | Yes | `DISTKNAM` | |
 | `discount_available_taken` | DECIMAL(19,5) | Yes | `DISAVTKN` | |
@@ -60,7 +60,7 @@ updated: 2026-09-09
 | `apply_from_exchange_rate` | DECIMAL(19,7) | Yes | `APFRMEXRATE` | |
 | `apply_to_rate_calc_method` | INT | Yes | `APTORTCLCMETH` | Multiply or divide. **Backwards inverts the translated amount** |
 | `from_currency_id` | STRING | Yes | `FROMCURR` | |
-| `currency_key` | BIGINT | Yes | Derived | FK to [[dim_currency]], **on the apply-to currency** |
+| `currency_key` | BIGINT | Yes | Derived | FK to [dim_currency](dim_currency.md), **on the apply-to currency** |
 | `gp_currency_id` | STRING | Yes | `CURNCYID` | |
 | `is_posted` | BOOLEAN | Yes | `POSTED` | |
 | `revaluation_status` | INT | Yes | `Revaluation_Status` | |
@@ -83,15 +83,15 @@ updated: 2026-09-09
 
 | Join to | On | Cardinality | Notes |
 |---|---|---|---|
-| [[fact_ar_transaction]] (apply-**to**) | `a.apply_to_transaction_key = t.ar_transaction_key` | N:1 | **Declared FK.** The aging-history join |
-| [[fact_ar_transaction]] (apply-**from**) | natural key — **no FK exists** | N:1 | See below |
-| [[dim_customer]] | `a.customer_key = dc.customer_key` | N:1 | Declared FK |
-| [[dim_currency]] | `a.currency_key = c.currency_key` | N:1 | Apply-**to** currency |
-| [[dim_fiscal_calendar]] | `a.fiscal_period_key = dfc.fiscal_period_key` | N:1 | Filter `period_level = 'period'` |
-| [[dim_date]] | `a.date_key = d.date_key` | N:1 | On `apply_date` |
-| [[mart_writeoff]] | `w.ar_apply_key = a.ar_apply_key` | 1:1 | Only the non-zero-`WROFAMNT` subset |
-| [[snap_ar_aging_daily]] | Validation, not a join | — | The reconstruction checks the snapshot |
-| [[fact_gl_posting]] | via `gl_post_date` + the document's `trx_source` | N:M | No `trx_source` on this table — go through the document |
+| [fact_ar_transaction](fact_ar_transaction.md) (apply-**to**) | `a.apply_to_transaction_key = t.ar_transaction_key` | N:1 | **Declared FK.** The aging-history join |
+| [fact_ar_transaction](fact_ar_transaction.md) (apply-**from**) | natural key — **no FK exists** | N:1 | See below |
+| [dim_customer](dim_customer.md) | `a.customer_key = dc.customer_key` | N:1 | Declared FK |
+| [dim_currency](dim_currency.md) | `a.currency_key = c.currency_key` | N:1 | Apply-**to** currency |
+| [dim_fiscal_calendar](dim_fiscal_calendar.md) | `a.fiscal_period_key = dfc.fiscal_period_key` | N:1 | Filter `period_level = 'period'` |
+| [dim_date](dim_date.md) | `a.date_key = d.date_key` | N:1 | On `apply_date` |
+| [mart_writeoff](mart_writeoff.md) | `w.ar_apply_key = a.ar_apply_key` | 1:1 | Only the non-zero-`WROFAMNT` subset |
+| [snap_ar_aging_daily](snap_ar_aging_daily.md) | Validation, not a join | — | The reconstruction checks the snapshot |
+| [fact_gl_posting](fact_gl_posting.md) | via `gl_post_date` + the document's `trx_source` | N:M | No `trx_source` on this table — go through the document |
 
 ### The apply-**from** document has no foreign key
 
@@ -144,7 +144,7 @@ FROM   finance.receivables.fact_ar_apply a
 WHERE  coalesce(a.writeoff_amount, 0) <> 0
 ```
 
-`<> 0`, not `> 0` — a **recovery** is a negative write-off, and bad-debt recovery is half the stated requirement. [[mart_writeoff]] is this query materialised with `business_unit_id` resolved as of the date.
+`<> 0`, not `> 0` — a **recovery** is a negative write-off, and bad-debt recovery is half the stated requirement. [mart_writeoff](mart_writeoff.md) is this query materialised with `business_unit_id` resolved as of the date.
 
 ### Do not sum `applied_amount` and `actual_applied_amount`
 

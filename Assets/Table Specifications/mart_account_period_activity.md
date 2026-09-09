@@ -13,13 +13,13 @@ updated: 2026-09-09
 > GP's account summary and beginning-balance tables are **not replicated**, so no opening balance exists to roll forward and no ending balance can be derived. This is **net period activity**. The design doc lists the slot as `mart_trial_balance` and instructs, in the same paragraph, to name it for what it is — because **a table called `mart_trial_balance` will be reconciled against a real trial balance and lose.** The rename implements the design rather than departing from it, and `design_slot = 'mart_trial_balance'` keeps the traceability.
 
 > [!warning] Not built
-> DDL: [[../ddl/06-finance-general-ledger.sql|06-finance-general-ledger.sql]] · `STATUS: NOT EXECUTED`. See [[Table Specifications]].
+> DDL: [06-finance-general-ledger.sql](../ddl/06-finance-general-ledger.sql) · `STATUS: NOT EXECUTED`. See [Table Specifications](Table%20Specifications.md).
 
 | | |
 |---|---|
 | **Type** | Mart (aggregate) |
 | **Grain** | Legal entity × fiscal year × period × account × currency × **`includes_bbf` × `includes_pl_close`** |
-| **Source** | [[fact_gl_posting]] |
+| **Source** | [fact_gl_posting](fact_gl_posting.md) |
 | **Clustering** | `CLUSTER BY (legal_entity_code, fiscal_year, fiscal_period)` |
 | **Readers** | `finance-analysts` |
 | **Tests** | **T-06** (the flags it aggregates on) |
@@ -31,10 +31,10 @@ updated: 2026-09-09
 | `legal_entity_code` | STRING | No | Fact | **PK** |
 | `fiscal_year` | INT | No | Fact | **PK** |
 | `fiscal_period` | INT | No | Fact | **PK.** Period 0 carries beginning-balance-forward |
-| `fiscal_period_key` | BIGINT | Yes | Fact | FK to [[dim_fiscal_calendar]] |
-| `account_key` | BIGINT | No | Fact | **PK.** FK to [[dim_gl_account]] |
+| `fiscal_period_key` | BIGINT | Yes | Fact | FK to [dim_fiscal_calendar](dim_fiscal_calendar.md) |
+| `account_key` | BIGINT | No | Fact | **PK.** FK to [dim_gl_account](dim_gl_account.md) |
 | `account_index` | INT | Yes | Fact | `ACTINDX` as replicated |
-| `currency_key` | BIGINT | Yes | Fact | **PK.** FK to [[dim_currency]]. **Activity is summarised per currency; summing across currencies without translation is the most likely way to misuse this table** |
+| `currency_key` | BIGINT | Yes | Fact | **PK.** FK to [dim_currency](dim_currency.md). **Activity is summarised per currency; summing across currencies without translation is the most likely way to misuse this table** |
 | `includes_bbf` | BOOLEAN | No | Derived | **PK.** Whether BBF rows are in this aggregate. **Part of the grain, not a footnote: the same account and period appears once with and once without** |
 | `includes_pl_close` | BOOLEAN | No | Derived | **PK.** Same rule for P&L close rows |
 | `debit_amount` | DECIMAL(19,5) | Yes | `sum(DEBITAMT)` | |
@@ -58,12 +58,12 @@ updated: 2026-09-09
 
 | Join to | On | Cardinality | Notes |
 |---|---|---|---|
-| [[dim_gl_account]] | `m.account_key = a.account_key` | N:1 | Declared FK |
-| [[dim_fiscal_calendar]] | `m.fiscal_period_key = dfc.fiscal_period_key` | N:1 | Filter `period_level = 'period'` |
-| [[dim_currency]] | `m.currency_key = c.currency_key` | N:1 | |
-| [[dim_legal_entity]] | `m.legal_entity_code = le.legal_entity_code` | N:1 | No surrogate carried |
-| [[mart_plan_vs_actual]] | This mart is its **actual** source | — | See below |
-| [[fact_gl_posting]] | This mart's source | — | Drill-down, not a join |
+| [dim_gl_account](dim_gl_account.md) | `m.account_key = a.account_key` | N:1 | Declared FK |
+| [dim_fiscal_calendar](dim_fiscal_calendar.md) | `m.fiscal_period_key = dfc.fiscal_period_key` | N:1 | Filter `period_level = 'period'` |
+| [dim_currency](dim_currency.md) | `m.currency_key = c.currency_key` | N:1 | |
+| [dim_legal_entity](dim_legal_entity.md) | `m.legal_entity_code = le.legal_entity_code` | N:1 | No surrogate carried |
+| [mart_plan_vs_actual](mart_plan_vs_actual.md) | This mart is its **actual** source | — | See below |
+| [fact_gl_posting](fact_gl_posting.md) | This mart's source | — | Drill-down, not a join |
 
 ### Every query must pin the two flag columns
 
@@ -113,4 +113,4 @@ The flag predicates must match the mart row's flags or the drill returns a diffe
 - **No opening balance exists.** Any request for a balance sheet or an ending balance from this table cannot be met from the current replica — it needs GP's summary tables added to the Fivetran connector.
 - **Period 0 is BBF**, so `includes_bbf = false` rows for period 0 will be near-empty rather than absent.
 - **The mart inherits T-06.** If the `SOURCDOC` derivation is wrong, the flags are wrong, and because they are in the key, every row is in the wrong bucket rather than merely mislabelled.
-- **[[mart_plan_vs_actual]] sources its actuals from here, not from the fact**, so the two products **agree by construction.** A change to this mart's aggregation changes plan-vs-actual too.
+- **[mart_plan_vs_actual](mart_plan_vs_actual.md) sources its actuals from here, not from the fact**, so the two products **agree by construction.** A change to this mart's aggregation changes plan-vs-actual too.

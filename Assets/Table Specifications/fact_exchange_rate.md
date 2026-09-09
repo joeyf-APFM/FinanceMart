@@ -10,7 +10,7 @@ updated: 2026-09-09
 # finance.reference.fact_exchange_rate
 
 > [!warning] Not built
-> DDL: [[../ddl/04-finance-reference.sql|04-finance-reference.sql]] · `STATUS: NOT EXECUTED`. See [[Table Specifications]].
+> DDL: [04-finance-reference.sql](../ddl/04-finance-reference.sql) · `STATUS: NOT EXECUTED`. See [Table Specifications](Table%20Specifications.md).
 
 | | |
 |---|---|
@@ -32,7 +32,7 @@ updated: 2026-09-09
 | `exchange_rate_key` | BIGINT | No | Derived | PK. `xxhash64(legal_entity_code, exchange_table_id, gp_currency_id, rate_date, rate_time)` |
 | `legal_entity_code` | STRING | No | Derived | **Exchange tables are maintained per company** — APFM and CAPFM rates are separate series |
 | `exchange_table_id` | STRING | No | `MC00100.EXGTBLID` | Which rate table the rate belongs to. Space-padded — trim |
-| `currency_key` | BIGINT | No | Derived | FK to [[dim_currency]] |
+| `currency_key` | BIGINT | No | Derived | FK to [dim_currency](dim_currency.md) |
 | `gp_currency_id` | STRING | No | `MC00100.CURNCYID` | As replicated |
 | `rate_date` | DATE | No | `MC00100.EXCHDATE` | Blank-date sentinel → NULL, **but a null here means the row is unusable** and should be surfaced rather than loaded |
 | `rate_time` | TIMESTAMP | Yes | `MC00100.TIME1` | GP stores date and time in separate columns. Both are needed because **a table can hold multiple rates for one day** |
@@ -49,8 +49,8 @@ updated: 2026-09-09
 
 | Join to | On | Cardinality | Notes |
 |---|---|---|---|
-| [[dim_currency]] | `f.currency_key = c.currency_key` | N:1 | |
-| [[dim_legal_entity]] | `f.legal_entity_code = le.legal_entity_code` | N:1 | Or via `legal_entity_key` if resolved at load |
+| [dim_currency](dim_currency.md) | `f.currency_key = c.currency_key` | N:1 | |
+| [dim_legal_entity](dim_legal_entity.md) | `f.legal_entity_code = le.legal_entity_code` | N:1 | Or via `legal_entity_key` if resolved at load |
 
 ### Translating a fact is an as-of join, not an equijoin
 

@@ -10,7 +10,7 @@ updated: 2026-09-09
 # finance.general_ledger.dim_gl_account
 
 > [!warning] Not built
-> DDL: [[../ddl/06-finance-general-ledger.sql|06-finance-general-ledger.sql]] · `STATUS: NOT EXECUTED`. See [[Table Specifications]].
+> DDL: [06-finance-general-ledger.sql](../ddl/06-finance-general-ledger.sql) · `STATUS: NOT EXECUTED`. See [Table Specifications](Table%20Specifications.md).
 
 | | |
 |---|---|
@@ -40,7 +40,7 @@ Segment names are **denormalised from `SY00300` onto every account row on purpos
 |---|---|---|---|---|
 | `account_key` | BIGINT | No | Derived | PK. `xxhash64(legal_entity_code, account_index)`. **Legal entity is in the key** — the same `ACTINDX` in APFM and CAPFM is a different account. Reserved members −1/−2/−3 |
 | `legal_entity_code` | STRING | Yes | Derived | Null on reserved members |
-| `legal_entity_key` | BIGINT | Yes | Derived | FK to [[dim_legal_entity]] |
+| `legal_entity_key` | BIGINT | Yes | Derived | FK to [dim_legal_entity](dim_legal_entity.md) |
 | `account_index` | INT | Yes | `GL00100.ACTINDX` | **The column every GL fact actually carries** |
 | `account_number` | STRING | Yes | Derived | Formatted, segments joined with `SY01500.ACSEGSEP`. **Do not hardcode a hyphen** |
 | `account_alias` | STRING | Yes | `GL00100.ACTALIAS` | |
@@ -56,10 +56,10 @@ Segment names are **denormalised from `SY00300` onto every account row on purpos
 | `account_type` | INT | Yes | `GL00100.ACCTTYPE` | Coded; decode from the GP reference value lists |
 | `posting_type` | INT | Yes | `GL00100.PSTNGTYP` | Balance-sheet vs P&L. **Determines whether a year-end close zeroes the account**, so it drives the P/L close exclusion on the fact |
 | `typical_balance` | INT | Yes | `GL00100.TPCLBLNC` | Debit or credit. Needed to present a signed amount without guessing |
-| `account_category_number` | INT | Yes | `GL00100.ACCATNUM` | The rollup level used by [[mart_period_summary]] |
+| `account_category_number` | INT | Yes | `GL00100.ACCATNUM` | The rollup level used by [mart_period_summary](mart_period_summary.md) |
 | `account_category_description` | STRING | Yes | `GL00102.ACCATDSC` | |
 | `fixed_or_variable` | INT | Yes | `GL00100.FXDORVAR` | |
-| `decimal_places` | INT | Yes | `GL00100.DECPLACS` | One-based offset, same caveat as [[dim_currency]] |
+| `decimal_places` | INT | Yes | `GL00100.DECPLACS` | One-based offset, same caveat as [dim_currency](dim_currency.md) |
 | `is_active` | BOOLEAN | Yes | `GL00100.ACTIVE` | |
 | `allows_account_entry` | BOOLEAN | Yes | `GL00100.ACCTENTR` | |
 | `user_defined_1` | STRING | Yes | `GL00100.USERDEF1` | Semantics an open decision in the epic |
@@ -86,19 +86,19 @@ Segment names are **denormalised from `SY00300` onto every account row on purpos
 
 | Join to | On | Cardinality | Notes |
 |---|---|---|---|
-| [[dim_legal_entity]] | `da.legal_entity_key = le.legal_entity_key` | N:1 | Declared FK. Also the source of `account_segment_separator` |
-| [[fact_gl_posting]] | `f.account_key = da.account_key` | 1:N | Declared FK. **The primary GL join** |
-| [[fact_gl_posting_work]] | `f.account_key = da.account_key` | 1:N | Declared FK |
-| [[mart_account_period_activity]] | `m.account_key = da.account_key` | 1:N | Declared FK |
-| [[fact_plan_amount]] | `f.account_key = da.account_key` | 1:N | Plan and actual meet at the account |
-| [[fact_plan_adjustment]] | `f.account_key = da.account_key` | 1:N | |
-| [[mart_plan_vs_actual]] | `m.account_key = da.account_key` | 1:N | |
-| [[fact_invoice_line]] | `f.sales_account_index` + `legal_entity_code` | N:1 | **No surrogate on the fact.** See below |
-| [[mart_period_summary]] | `account_category_number` | N:M | **Not an account-grain join.** See below |
+| [dim_legal_entity](dim_legal_entity.md) | `da.legal_entity_key = le.legal_entity_key` | N:1 | Declared FK. Also the source of `account_segment_separator` |
+| [fact_gl_posting](fact_gl_posting.md) | `f.account_key = da.account_key` | 1:N | Declared FK. **The primary GL join** |
+| [fact_gl_posting_work](fact_gl_posting_work.md) | `f.account_key = da.account_key` | 1:N | Declared FK |
+| [mart_account_period_activity](mart_account_period_activity.md) | `m.account_key = da.account_key` | 1:N | Declared FK |
+| [fact_plan_amount](fact_plan_amount.md) | `f.account_key = da.account_key` | 1:N | Plan and actual meet at the account |
+| [fact_plan_adjustment](fact_plan_adjustment.md) | `f.account_key = da.account_key` | 1:N | |
+| [mart_plan_vs_actual](mart_plan_vs_actual.md) | `m.account_key = da.account_key` | 1:N | |
+| [fact_invoice_line](fact_invoice_line.md) | `f.sales_account_index` + `legal_entity_code` | N:1 | **No surrogate on the fact.** See below |
+| [mart_period_summary](mart_period_summary.md) | `account_category_number` | N:M | **Not an account-grain join.** See below |
 
 ### Joining from a raw account index
 
-Where a fact carries `ACTINDX` but no `account_key` — [[fact_invoice_line]]'s `sales_account_index` is the case in this catalog — the entity must be in the join:
+Where a fact carries `ACTINDX` but no `account_key` — [fact_invoice_line](fact_invoice_line.md)'s `sales_account_index` is the case in this catalog — the entity must be in the join:
 
 ```sql
 -- RIGHT
@@ -112,7 +112,7 @@ JOIN ... ON a.account_index = f.sales_account_index
 
 ### `mart_period_summary` is not an account-grain join
 
-That mart rolls up on `account_category_number`, deliberately, so it is a summary rather than a second copy of [[mart_account_period_activity]]. Joining it to this dimension on `account_key` is impossible; joining on `account_category_number` fans out to every account in the category. Use the category description already carried on the mart.
+That mart rolls up on `account_category_number`, deliberately, so it is a summary rather than a second copy of [mart_account_period_activity](mart_account_period_activity.md). Joining it to this dimension on `account_key` is impossible; joining on `account_category_number` fans out to every account in the category. Use the category description already carried on the mart.
 
 ### Two segment traps
 

@@ -13,7 +13,7 @@ updated: 2026-09-09
 > GP calls it a budget, the business plans against several things that are not budgets, and *"the schema will outlive whichever word is current"* — but **the GP column names keep BUDGET so the lineage back to source stays obvious.**
 
 > [!warning] Not built
-> DDL: [[../ddl/09-finance-plan.sql|09-finance-plan.sql]] · `STATUS: NOT EXECUTED`. See [[Table Specifications]].
+> DDL: [09-finance-plan.sql](../ddl/09-finance-plan.sql) · `STATUS: NOT EXECUTED`. See [Table Specifications](Table%20Specifications.md).
 
 | | |
 |---|---|
@@ -27,7 +27,7 @@ updated: 2026-09-09
 
 ## `GL00200.BUDPWRD` is deliberately not carried
 
-**GL00200 carries a budget password.** It is excluded for the same reason `SY01400.PASSWORD` is excluded from [[dim_gp_user]]: *"a secret that reaches a mart has effectively been published."*
+**GL00200 carries a budget password.** It is excluded for the same reason `SY01400.PASSWORD` is excluded from [dim_gp_user](dim_gp_user.md): *"a secret that reaches a mart has effectively been published."*
 
 The exclusion is recorded as `excludes_source_columns = 'BUDPWRD'` **so it cannot be quietly undone by someone adding "the rest of the header columns."**
 
@@ -41,7 +41,7 @@ The exclusion is recorded as `excludes_source_columns = 'BUDPWRD'` **so it canno
 |---|---|---|---|---|
 | `plan_amount_key` | BIGINT | No | Derived | PK. `xxhash64(legal_entity_code, budget_id, fiscal_year, period_number, account_index)`. **T-12** must confirm uniqueness in `gl00201` |
 | `legal_entity_code` | STRING | No | Derived | **In the key because `BUDGETID` and `ACTINDX` are both company-scoped** |
-| `legal_entity_key` | BIGINT | Yes | Derived | FK to [[dim_legal_entity]] |
+| `legal_entity_key` | BIGINT | Yes | Derived | FK to [dim_legal_entity](dim_legal_entity.md) |
 | `budget_id` | STRING | No | `GL00201.BUDGETID` | **GP allows many budgets per year, so this is part of the grain and not a filter to be forgotten. Two budgets summed together is a number that means nothing** |
 | `budget_comment` | STRING | Yes | `GL00200.BUDCOMNT` | **Often the only human-readable statement of what a budget id represents** — carried so a consumer is not choosing between opaque codes |
 | `budget_based_on` | INT | Yes | `GL00200.Based_On` | What GP built the budget from — another budget, actuals, or nothing. **Material to whether a variance is meaningful** |
@@ -50,12 +50,12 @@ The exclusion is recorded as `excludes_source_columns = 'BUDPWRD'` **so it canno
 | `fiscal_year` | INT | No | `GL00201.YEAR1` | |
 | `period_number` | INT | No | `GL00201.PERIODID` | **Period 0 carries beginning balances in GP and is not an error** |
 | `period_date` | DATE | Yes | `GL00201.PERIODDT` | |
-| `fiscal_period_key` | BIGINT | Yes | Derived | FK to [[dim_fiscal_calendar]] **at `period_level = 'period'`** |
+| `fiscal_period_key` | BIGINT | Yes | Derived | FK to [dim_fiscal_calendar](dim_fiscal_calendar.md) **at `period_level = 'period'`** |
 | `account_index` | INT | No | `GL00201.ACTINDX` | GP's internal account key, **company-scoped** |
-| `gl_account_key` | BIGINT | Yes | Derived | FK to [[dim_gl_account]]. **The join that makes plan and actual comparable, and it only works if both sides resolve the account the same way** |
+| `gl_account_key` | BIGINT | Yes | Derived | FK to [dim_gl_account](dim_gl_account.md). **The join that makes plan and actual comparable, and it only works if both sides resolve the account the same way** |
 | `account_segment_1` … `account_segment_5` | STRING | Yes | `GL00201.ACTNUMBR_1..5` | GP repeats the segments on the budget detail row. **Carried so a plan figure can be read at segment grain without resolving the account dimension first** |
 | `account_category_number` | INT | Yes | `GL00201.ACCATNUM` | |
-| `budget_amount` | DECIMAL(19,5) | Yes | `GL00201.BUDGETAMT` | **The posted, current plan.** Adjustments are separate, in [[fact_plan_adjustment]] — *"whether a consumer wants the plan as originally set or as adjusted is a real question this split lets them answer"* |
+| `budget_amount` | DECIMAL(19,5) | Yes | `GL00201.BUDGETAMT` | **The posted, current plan.** Adjustments are separate, in [fact_plan_adjustment](fact_plan_adjustment.md) — *"whether a consumer wants the plan as originally set or as adjusted is a real question this split lets them answer"* |
 | `source_system` | STRING | No | Literal | `GP` |
 | `source_table` | STRING | No | Literal | e.g. `main.prod_gp_apfm_dbo_live.gl00201` |
 | `_source_synced_at` | TIMESTAMP | Yes | `_fivetran_synced` | **NOT freshness** |
@@ -76,13 +76,13 @@ The exclusion is recorded as `excludes_source_columns = 'BUDPWRD'` **so it canno
 
 | Join to | On | Cardinality | Notes |
 |---|---|---|---|
-| [[dim_gl_account]] | `f.gl_account_key = a.account_key` | N:1 | Declared FK. **Plan and actual meet here** |
-| [[dim_fiscal_calendar]] | `f.fiscal_period_key = dfc.fiscal_period_key` | N:1 | Declared FK. Filter `period_level = 'period'` |
-| [[dim_legal_entity]] | `f.legal_entity_key = le.legal_entity_key` | N:1 | Declared FK |
-| [[fact_plan_adjustment]] | `(legal_entity_code, budget_id, fiscal_year, period_number, account_index)` | 1:N | **No FK.** Natural-key join, all five parts |
-| [[mart_plan_vs_actual]] | This fact is its **plan** source | — | Aggregate |
-| [[mart_account_period_activity]] | `(legal_entity_code, fiscal_year, account_key)` + period | N:M | **Prefer the mart** — see below |
-| [[dim_date]] | — | — | **No `date_key` on this table.** A plan is a period amount, not a dated event |
+| [dim_gl_account](dim_gl_account.md) | `f.gl_account_key = a.account_key` | N:1 | Declared FK. **Plan and actual meet here** |
+| [dim_fiscal_calendar](dim_fiscal_calendar.md) | `f.fiscal_period_key = dfc.fiscal_period_key` | N:1 | Declared FK. Filter `period_level = 'period'` |
+| [dim_legal_entity](dim_legal_entity.md) | `f.legal_entity_key = le.legal_entity_key` | N:1 | Declared FK |
+| [fact_plan_adjustment](fact_plan_adjustment.md) | `(legal_entity_code, budget_id, fiscal_year, period_number, account_index)` | 1:N | **No FK.** Natural-key join, all five parts |
+| [mart_plan_vs_actual](mart_plan_vs_actual.md) | This fact is its **plan** source | — | Aggregate |
+| [mart_account_period_activity](mart_account_period_activity.md) | `(legal_entity_code, fiscal_year, account_key)` + period | N:M | **Prefer the mart** — see below |
+| [dim_date](dim_date.md) | — | — | **No `date_key` on this table.** A plan is a period amount, not a dated event |
 
 ### `budget_id` in every query, or the number means nothing
 
@@ -116,7 +116,7 @@ FULL OUTER JOIN finance.general_ledger.mart_account_period_activity act
   AND NOT act.includes_bbf AND NOT act.includes_pl_close   -- omit these and the variance is wrong
 ```
 
-**`FULL OUTER`, not inner.** An account with spend and no plan is exactly what a variance report exists to surface. And the actual side must come from [[mart_account_period_activity]] with its flags pinned — a variance against an actual that includes beginning-balance-forward entries **is wrong in a way that looks plausible.**
+**`FULL OUTER`, not inner.** An account with spend and no plan is exactly what a variance report exists to surface. And the actual side must come from [mart_account_period_activity](mart_account_period_activity.md) with its flags pinned — a variance against an actual that includes beginning-balance-forward entries **is wrong in a way that looks plausible.**
 
 The currency trap composes here too: that mart's grain includes `currency_key`, and this fact has no currency column at all. **Plan amounts are functional currency; summing a multi-currency actual against them mixes units.**
 
@@ -129,11 +129,11 @@ WHERE  budget_id = :budget AND legal_entity_code = :entity
 GROUP BY 1, 2, 3
 ```
 
-The segments are on the row precisely so this needs no join. **But do not group by `account_segment_1`** — for APFM that is the Company segment, `10` on 100% of activity, and the grouping returns one row while looking like a working breakdown. Same trap as on [[dim_gl_account]].
+The segments are on the row precisely so this needs no join. **But do not group by `account_segment_1`** — for APFM that is the Company segment, `10` on 100% of activity, and the grouping returns one row while looking like a working breakdown. Same trap as on [dim_gl_account](dim_gl_account.md).
 
 ## Gotchas
 
-- **`budget_amount` is the plan *after* posted adjustments.** "Plan as originally set" needs this minus the posted deltas in [[fact_plan_adjustment]].
+- **`budget_amount` is the plan *after* posted adjustments.** "Plan as originally set" needs this minus the posted deltas in [fact_plan_adjustment](fact_plan_adjustment.md).
 - **No currency column.** Amounts are functional currency by implication. Any CAPFM comparison needs translation on the actual side, not here.
 - **`account_index` is company-scoped.** Any natural-key join to an account must carry `legal_entity_code`.
 - **Period 0 exists.** Excluding it drops GP's beginning balances; including it in a period-by-period plan chart adds a phantom period.

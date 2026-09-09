@@ -10,7 +10,7 @@ updated: 2026-09-09
 # finance.general_ledger.fact_gl_posting_work
 
 > [!warning] Not built
-> DDL: [[../ddl/06-finance-general-ledger.sql|06-finance-general-ledger.sql]] · `STATUS: NOT EXECUTED`. See [[Table Specifications]].
+> DDL: [06-finance-general-ledger.sql](../ddl/06-finance-general-ledger.sql) · `STATUS: NOT EXECUTED`. See [Table Specifications](Table%20Specifications.md).
 
 | | |
 |---|---|
@@ -25,7 +25,7 @@ updated: 2026-09-09
 
 *"What is sitting unposted at period end"* — a **close-readiness question rather than a reporting one.**
 
-> [!danger] Never sum this with [[fact_gl_posting]]
+> [!danger] Never sum this with [fact_gl_posting](fact_gl_posting.md)
 > Unposted amounts are **not recognized** and must never be added to the posted fact in a single measure. The `measure_class = 'not_recognized'` tag exists to make that visible on the object.
 
 ## `work_source` is load-bearing, not cosmetic
@@ -45,26 +45,26 @@ Two source pairs with **materially different shapes**, distinguished rather than
 |---|---|---|---|---|
 | `gl_work_key` | BIGINT | No | Derived | PK. `xxhash64(legal_entity_code, work_source, batch_number, journal_entry_number, sequence_number)` |
 | `legal_entity_code` | STRING | No | Derived | |
-| `legal_entity_key` | BIGINT | Yes | Derived | FK to [[dim_legal_entity]] |
+| `legal_entity_key` | BIGINT | Yes | Derived | FK to [dim_legal_entity](dim_legal_entity.md) |
 | `work_source` | STRING | No | Derived | `general_journal` or `quick_journal` |
 | `batch_number` | STRING | Yes | `BACHNUMB` | **Null for quick journals**, which are keyed on `BSNSFMID` instead |
 | `business_form_id` | STRING | Yes | `BSNSFMID` | **Quick journals only** |
 | `journal_entry_number` | BIGINT | No | `JRNENTRY` | |
 | `sequence_number` | BIGINT | No | `SQNCLINE` | Note: `SQNCLINE`, not `SEQNUMBR` as on the posted fact |
-| `account_key` | BIGINT | Yes | Derived | FK to [[dim_gl_account]] |
+| `account_key` | BIGINT | Yes | Derived | FK to [dim_gl_account](dim_gl_account.md) |
 | `account_index` | INT | Yes | `ACTINDX` | |
 | `transaction_date` | DATE | Yes | `TRXDATE` | |
 | `document_date` | DATE | Yes | `DOCDATE` | |
-| `date_key` | INT | Yes | Derived | FK to [[dim_date]] |
+| `date_key` | INT | Yes | Derived | FK to [dim_date](dim_date.md) |
 | `fiscal_year` | INT | Yes | `OPENYEAR` | |
 | `fiscal_period` | INT | Yes | `PERIODID` | |
-| `fiscal_period_key` | BIGINT | Yes | Derived | FK to [[dim_fiscal_calendar]] — **not declared as a constraint** on this table |
+| `fiscal_period_key` | BIGINT | Yes | Derived | FK to [dim_fiscal_calendar](dim_fiscal_calendar.md) — **not declared as a constraint** on this table |
 | `debit_amount` | DECIMAL(19,5) | Yes | `gl10001.DEBITAMT` | **Null for quick journals** |
 | `credit_amount` | DECIMAL(19,5) | Yes | `gl10001.CRDTAMNT` | **Null for quick journals** |
 | `signed_amount` | DECIMAL(19,5) | Yes | `gl10101.TRXAMNT` / derived | **The one amount column populated for every row.** `TRXAMNT` for quick journals; debit − credit for general journals |
 | `originating_debit_amount` | DECIMAL(19,5) | Yes | `gl10001.ORDBTAMT` | General journals only |
 | `originating_credit_amount` | DECIMAL(19,5) | Yes | `gl10001.ORCRDAMT` | General journals only |
-| `currency_key` | BIGINT | Yes | Derived | FK to [[dim_currency]]. **Null for quick journals** |
+| `currency_key` | BIGINT | Yes | Derived | FK to [dim_currency](dim_currency.md). **Null for quick journals** |
 | `exchange_rate` | DECIMAL(19,7) | Yes | `XCHGRATE` | General journals only |
 | `posting_status` | INT | Yes | `PSTGSTUS` | Where the batch is in GP's posting workflow |
 | `error_state` | INT | Yes | `ERRSTATE` | **A non-zero value means GP itself considers the batch unpostable — usually the answer to "why has this not posted"** |
@@ -74,7 +74,7 @@ Two source pairs with **materially different shapes**, distinguished rather than
 | `description` | STRING | Yes | `DSCRIPTN` | |
 | `trx_source` | STRING | Yes | `TRXSORCE` | |
 | `series_id` | INT | Yes | `SERIES` | **General journals only** |
-| `last_modified_by_user_id` | STRING | Yes | `LASTUSER` | Joins to [[dim_gp_user]] |
+| `last_modified_by_user_id` | STRING | Yes | `LASTUSER` | Joins to [dim_gp_user](dim_gp_user.md) |
 | `source_system` | STRING | No | Literal | `GP` |
 | `source_table` | STRING | No | Literal | The tables the row was assembled from |
 | `_loaded_at` | TIMESTAMP | No | Pipeline | |
@@ -92,13 +92,13 @@ Two source pairs with **materially different shapes**, distinguished rather than
 
 | Join to | On | Cardinality | Notes |
 |---|---|---|---|
-| [[dim_gl_account]] | `f.account_key = a.account_key` | N:1 | Declared FK |
-| [[dim_legal_entity]] | `f.legal_entity_key = le.legal_entity_key` | N:1 | Not declared, but the column is there |
-| [[dim_currency]] | `f.currency_key = c.currency_key` | N:1 | **Matches nothing on quick-journal rows.** `LEFT JOIN` |
-| [[dim_date]] | `f.date_key = d.date_key` | N:1 | |
-| [[dim_fiscal_calendar]] | `f.fiscal_period_key = dfc.fiscal_period_key` | N:1 | Filter `period_level = 'period'` |
-| [[dim_gp_user]] | `trim(u.gp_user_id) = trim(f.last_modified_by_user_id)` | N:1 | `LEFT JOIN` |
-| [[fact_gl_posting]] | — | — | **Do not union or sum together.** See below |
+| [dim_gl_account](dim_gl_account.md) | `f.account_key = a.account_key` | N:1 | Declared FK |
+| [dim_legal_entity](dim_legal_entity.md) | `f.legal_entity_key = le.legal_entity_key` | N:1 | Not declared, but the column is there |
+| [dim_currency](dim_currency.md) | `f.currency_key = c.currency_key` | N:1 | **Matches nothing on quick-journal rows.** `LEFT JOIN` |
+| [dim_date](dim_date.md) | `f.date_key = d.date_key` | N:1 | |
+| [dim_fiscal_calendar](dim_fiscal_calendar.md) | `f.fiscal_period_key = dfc.fiscal_period_key` | N:1 | Filter `period_level = 'period'` |
+| [dim_gp_user](dim_gp_user.md) | `trim(u.gp_user_id) = trim(f.last_modified_by_user_id)` | N:1 | `LEFT JOIN` |
+| [fact_gl_posting](fact_gl_posting.md) | — | — | **Do not union or sum together.** See below |
 
 ### Always sum `signed_amount`, never debit/credit
 

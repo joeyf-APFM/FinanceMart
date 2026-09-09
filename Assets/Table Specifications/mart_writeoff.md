@@ -13,13 +13,13 @@ updated: 2026-09-09
 > This directly serves the stated pain point — **write-offs and bad-debt recovery invisible to CAMs and Community Ops**. It **needs no ingestion that does not already exist.** It needs this table and a grant. `requires_no_new_ingestion = 'true'` is on the object.
 
 > [!warning] Not built
-> DDL: [[../ddl/07-finance-receivables.sql|07-finance-receivables.sql]] · `STATUS: NOT EXECUTED`. See [[Table Specifications]].
+> DDL: [07-finance-receivables.sql](../ddl/07-finance-receivables.sql) · `STATUS: NOT EXECUTED`. See [Table Specifications](Table%20Specifications.md).
 
 | | |
 |---|---|
 | **Type** | Mart (event log) |
-| **Grain** | One write-off event = **one [[fact_ar_apply]] row with a non-zero `WROFAMNT`** |
-| **Source** | [[fact_ar_apply]] |
+| **Grain** | One write-off event = **one [fact_ar_apply](fact_ar_apply.md) row with a non-zero `WROFAMNT`** |
+| **Source** | [fact_ar_apply](fact_ar_apply.md) |
 | **Clustering** | `CLUSTER BY (legal_entity_code, writeoff_date)` |
 | **Readers** | `finance-analysts` — **and the grant to CAM / Community Ops is the point** |
 
@@ -28,20 +28,20 @@ updated: 2026-09-09
 | Column | Type | Null | Source | Notes |
 |---|---|---|---|---|
 | `writeoff_key` | BIGINT | No | Derived | PK. **Inherited from the `fact_ar_apply` row that carries the write-off** — not a new hash |
-| `ar_apply_key` | BIGINT | No | [[fact_ar_apply]] | FK. One write-off event is one apply row |
+| `ar_apply_key` | BIGINT | No | [fact_ar_apply](fact_ar_apply.md) | FK. One write-off event is one apply row |
 | `legal_entity_code` | STRING | No | Derived | |
-| `customer_key` | BIGINT | Yes | Derived | FK to [[dim_customer]] |
+| `customer_key` | BIGINT | Yes | Derived | FK to [dim_customer](dim_customer.md) |
 | `gp_customer_number` | STRING | No | `CUSTNMBR` | Trimmed |
 | `document_number` | STRING | Yes | Apply-to doc | The document that was written off |
 | `document_type_code` | INT | Yes | `RMDTYPAL` | Of the apply-to document |
 | `writeoff_date` | DATE | Yes | `apply_date` | **The answer to "when was it written off" — which GP does record and nothing currently surfaces** |
-| `gl_post_date` | DATE | Yes | `GLPOSTDT` | For reconciliation to [[fact_gl_posting]] |
-| `fiscal_period_key` | BIGINT | Yes | Derived | FK to [[dim_fiscal_calendar]] |
+| `gl_post_date` | DATE | Yes | `GLPOSTDT` | For reconciliation to [fact_gl_posting](fact_gl_posting.md) |
+| `fiscal_period_key` | BIGINT | Yes | Derived | FK to [dim_fiscal_calendar](dim_fiscal_calendar.md) |
 | `writeoff_amount` | DECIMAL(19,5) | Yes | `WROFAMNT` | |
 | `originating_writeoff_amount` | DECIMAL(19,5) | Yes | `ORWROFAM` | Originating currency |
 | `actual_writeoff_amount` | DECIMAL(19,5) | Yes | `ActualWriteOffAmount` | **Can differ from `WROFAMNT` when a rate moves between the two documents** |
-| `currency_key` | BIGINT | Yes | Derived | FK to [[dim_currency]] |
-| `business_unit_id` | STRING | Yes | Resolved | **Through [[bridge_customer_to_business_unit]] *as of `writeoff_date`*, not from the current mapping.** Present because the pain point is CAM and Community Ops visibility, and both work at **community grain rather than billing-account grain** |
+| `currency_key` | BIGINT | Yes | Derived | FK to [dim_currency](dim_currency.md) |
+| `business_unit_id` | STRING | Yes | Resolved | **Through [bridge_customer_to_business_unit](bridge_customer_to_business_unit.md) *as of `writeoff_date`*, not from the current mapping.** Present because the pain point is CAM and Community Ops visibility, and both work at **community grain rather than billing-account grain** |
 | `source_system` | STRING | No | Literal | `GP` |
 | `_loaded_at` | TIMESTAMP | No | Pipeline | |
 
@@ -59,7 +59,7 @@ updated: 2026-09-09
 
 The bridge is many-to-many **and** effective-dated. Resolving it once, in the pipeline, at `writeoff_date`, gives every consumer:
 
-- **No fan-out.** One row per write-off event, so `sum(writeoff_amount)` by community is safe here in a way it is not on [[mart_ar_aging]].
+- **No fan-out.** One row per write-off event, so `sum(writeoff_amount)` by community is safe here in a way it is not on [mart_ar_aging](mart_ar_aging.md).
 - **No as-of mistake.** A write-off from 2024 is attributed to the community the customer belonged to **in 2024**, not the current one.
 
 That second point is the expensive one. Resolving the bridge at query time with `current_date` re-attributes every historical write-off to today's mapping — which does not error, does not change the row count, and quietly moves dollars between communities.
@@ -70,16 +70,16 @@ That second point is the expensive one. Resolving the bridge at query time with 
 
 | Join to | On | Cardinality | Notes |
 |---|---|---|---|
-| [[fact_ar_apply]] | `w.ar_apply_key = a.ar_apply_key` | 1:1 | Declared FK. The full apply context |
-| [[fact_ar_transaction]] | `(legal_entity_code, gp_customer_number, document_number, document_type_code)` | N:1 | **No FK** — natural-key join, all four parts |
-| [[dim_customer]] | `w.customer_key = dc.customer_key` | N:1 | Declared FK |
-| [[dim_currency]] | `w.currency_key = c.currency_key` | N:1 | |
-| [[dim_fiscal_calendar]] | `w.fiscal_period_key = dfc.fiscal_period_key` | N:1 | Filter `period_level = 'period'` |
-| [[dim_date]] | `d.full_date = w.writeoff_date` | N:1 | No `date_key` column |
-| [[dim_collections_attributes]] | `w.customer_key = ca.customer_key` | N:1 | **`LEFT JOIN`.** Who owned the collections relationship |
-| [[mart_ar_aging]] | `(legal_entity_code, gp_customer_number)` | N:M | Aging beside write-offs — pin that mart's `as_of_date` and `computation_basis` |
-| [[bridge_customer_to_business_unit]] | — | — | **Do not join.** `business_unit_id` is already resolved as of the date |
-| [[fact_gl_posting]] | via `gl_post_date` + the document's `trx_source` | N:M | Reconciliation |
+| [fact_ar_apply](fact_ar_apply.md) | `w.ar_apply_key = a.ar_apply_key` | 1:1 | Declared FK. The full apply context |
+| [fact_ar_transaction](fact_ar_transaction.md) | `(legal_entity_code, gp_customer_number, document_number, document_type_code)` | N:1 | **No FK** — natural-key join, all four parts |
+| [dim_customer](dim_customer.md) | `w.customer_key = dc.customer_key` | N:1 | Declared FK |
+| [dim_currency](dim_currency.md) | `w.currency_key = c.currency_key` | N:1 | |
+| [dim_fiscal_calendar](dim_fiscal_calendar.md) | `w.fiscal_period_key = dfc.fiscal_period_key` | N:1 | Filter `period_level = 'period'` |
+| [dim_date](dim_date.md) | `d.full_date = w.writeoff_date` | N:1 | No `date_key` column |
+| [dim_collections_attributes](dim_collections_attributes.md) | `w.customer_key = ca.customer_key` | N:1 | **`LEFT JOIN`.** Who owned the collections relationship |
+| [mart_ar_aging](mart_ar_aging.md) | `(legal_entity_code, gp_customer_number)` | N:M | Aging beside write-offs — pin that mart's `as_of_date` and `computation_basis` |
+| [bridge_customer_to_business_unit](bridge_customer_to_business_unit.md) | — | — | **Do not join.** `business_unit_id` is already resolved as of the date |
+| [fact_gl_posting](fact_gl_posting.md) | via `gl_post_date` + the document's `trx_source` | N:M | Reconciliation |
 
 ### Recoveries are negative write-offs
 

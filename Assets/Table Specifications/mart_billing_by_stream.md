@@ -10,10 +10,10 @@ updated: 2026-09-09
 # finance.billing.mart_billing_by_stream
 
 > [!danger] Do not reconcile this to the income statement
-> `do_not_reconcile_to = 'income_statement'` is on the object. **This is billing activity, not revenue.** Reconciling it to the income statement will not tie *"because the two measure different things at different times, not because either is wrong."* Recognised revenue is in [[fact_gl_posting]].
+> `do_not_reconcile_to = 'income_statement'` is on the object. **This is billing activity, not revenue.** Reconciling it to the income statement will not tie *"because the two measure different things at different times, not because either is wrong."* Recognised revenue is in [fact_gl_posting](fact_gl_posting.md).
 
 > [!warning] Not built · blocked on T-11
-> DDL: [[../ddl/08-finance-billing.sql|08-finance-billing.sql]] · `STATUS: NOT EXECUTED`. See [[Table Specifications]].
+> DDL: [08-finance-billing.sql](../ddl/08-finance-billing.sql) · `STATUS: NOT EXECUTED`. See [Table Specifications](Table%20Specifications.md).
 >
 > **`billing_stream`'s domain must be enumerated from `ipr` before this mart is built** (T-11). *"An unenumerated stream column becomes an ever-growing pivot no one can validate."*
 
@@ -21,7 +21,7 @@ updated: 2026-09-09
 |---|---|
 | **Type** | Mart (aggregate) |
 | **Grain** | Fiscal period × legal entity × billing stream × business unit |
-| **Sources** | [[fact_referral_charge]] and [[fact_invoice_line]] |
+| **Sources** | [fact_referral_charge](fact_referral_charge.md) and [fact_invoice_line](fact_invoice_line.md) |
 | **Measure class** | `operational_not_recognized` — **carried as a data column too** |
 | **Clustering** | `CLUSTER BY (fiscal_year, legal_entity_code)` |
 | **Readers** | `finance-analysts` |
@@ -35,7 +35,7 @@ updated: 2026-09-09
 
 | Column | Type | Null | Source | Notes |
 |---|---|---|---|---|
-| `fiscal_period_key` | BIGINT | No | Derived | **PK.** FK to [[dim_fiscal_calendar]] **at `period_level = 'period'`** |
+| `fiscal_period_key` | BIGINT | No | Derived | **PK.** FK to [dim_fiscal_calendar](dim_fiscal_calendar.md) **at `period_level = 'period'`** |
 | `fiscal_year` | INT | No | Denormalised | For query convenience |
 | `period_number` | INT | No | Denormalised | For query convenience |
 | `legal_entity_code` | STRING | No | Derived | **PK.** APFM or CAPFM. **A CAPFM row carries charge measures and null invoice measures, and that is correct rather than missing data** |
@@ -81,13 +81,13 @@ WHERE business_unit_id IS NOT NULL
 
 | Join to | On | Cardinality | Notes |
 |---|---|---|---|
-| [[dim_fiscal_calendar]] | `m.fiscal_period_key = dfc.fiscal_period_key` | N:1 | Declared FK. **Filter `period_level = 'period'`** |
-| [[dim_legal_entity]] | `m.legal_entity_code = le.legal_entity_code` | N:1 | No surrogate carried |
-| [[fact_referral_charge]] | Drill-down | — | This mart's charge source |
-| [[fact_invoice_line]] | Drill-down | — | This mart's invoice source |
-| [[mart_period_summary]] | **Do not join** | — | Different measure classes. See below |
-| [[mart_plan_vs_actual]] | **Do not join** | — | Plan is compared to *recognised* actuals, not to billing |
-| [[dim_customer]] | Not reachable | — | This mart is community grain, not customer grain |
+| [dim_fiscal_calendar](dim_fiscal_calendar.md) | `m.fiscal_period_key = dfc.fiscal_period_key` | N:1 | Declared FK. **Filter `period_level = 'period'`** |
+| [dim_legal_entity](dim_legal_entity.md) | `m.legal_entity_code = le.legal_entity_code` | N:1 | No surrogate carried |
+| [fact_referral_charge](fact_referral_charge.md) | Drill-down | — | This mart's charge source |
+| [fact_invoice_line](fact_invoice_line.md) | Drill-down | — | This mart's invoice source |
+| [mart_period_summary](mart_period_summary.md) | **Do not join** | — | Different measure classes. See below |
+| [mart_plan_vs_actual](mart_plan_vs_actual.md) | **Do not join** | — | Plan is compared to *recognised* actuals, not to billing |
+| [dim_customer](dim_customer.md) | Not reachable | — | This mart is community grain, not customer grain |
 
 ### Never join or union this to a GL product
 
@@ -113,7 +113,7 @@ CASE WHEN invoiced_amount IS NULL THEN 'invoice side not replicated for this ent
 coalesce(invoiced_amount, 0)
 ```
 
-[[fact_invoice_line]] is **APFM only** — `sop30300` is not replicated for CAPFM. Coalescing the null to zero turns a known gap into a confident claim that CAPFM billed nothing, which is the specific failure the DDL comment warns about.
+[fact_invoice_line](fact_invoice_line.md) is **APFM only** — `sop30300` is not replicated for CAPFM. Coalescing the null to zero turns a known gap into a confident claim that CAPFM billed nothing, which is the specific failure the DDL comment warns about.
 
 ### `ipr_matched_rate` is the health check, not a footnote
 
@@ -133,8 +133,8 @@ They are **disjoint populations**: `charge_amount` is all charges over the grain
 
 ## Gotchas
 
-- **The grain has no customer.** Customer-level billing questions go to [[fact_referral_charge]].
+- **The grain has no customer.** Customer-level billing questions go to [fact_referral_charge](fact_referral_charge.md).
 - **`billing_stream` is unenumerated today.** Any dashboard pivot built on it will grow silently as new charge types appear in `ipr`.
-- **T-10 propagates.** If [[fact_referral_charge]]'s grain is wrong, every measure here is wrong by the same factor, and nothing in this mart can detect it.
+- **T-10 propagates.** If [fact_referral_charge](fact_referral_charge.md)'s grain is wrong, every measure here is wrong by the same factor, and nothing in this mart can detect it.
 - **`period_number` and `fiscal_year` are denormalised copies.** Convenient, and they can drift from `fiscal_period_key` if the calendar is rebuilt — reconcile them, do not assume.
 - **No `source_system` column**, unlike most tables here. Provenance is `_loaded_at` plus the two named source facts.

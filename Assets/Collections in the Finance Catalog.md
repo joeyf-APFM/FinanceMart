@@ -11,7 +11,7 @@ updated: 2026-09-09
 # Collections in the Finance Catalog
 
 > [!note] Placement analysis only — nothing was changed
-> This note answers *where collections belongs* in [[../../plans/2026-09-09-finance-catalog-and-mart-design|Finance Catalog and Mart Design 2026-09-09]]. **No DDL file was edited, no table was added, and no grant was changed.** Everything proposed here is a proposal. The eleven files under `ddl/` still describe exactly what [[Finance Catalog DDL|Finance Catalog DDL]] says they describe.
+> This note answers *where collections belongs* in *Finance Catalog and Mart Design 2026-09-09* (vault: `plans/2026-09-09-finance-catalog-and-mart-design`, not in this repo). **No DDL file was edited, no table was added, and no grant was changed.** Everything proposed here is a proposal. The eleven files under `ddl/` still describe exactly what [Finance Catalog DDL](Finance%20Catalog%20DDL.md) says they describe.
 
 ## The answer
 
@@ -19,7 +19,7 @@ updated: 2026-09-09
 
 Collections is receivables management read with a different intent. The core operational query needs `fact_ar_transaction`, `mart_ar_aging`, and `dim_collections_attributes` together; a separate `finance.collections` schema would make the primary use case a cross-schema join and buy nothing. Under the design's own rule — schemas are marts, and a mart has a fact grain — collections has no independent grain today. It reuses `fact_ar_transaction` and `fact_ar_apply`.
 
-The consumption side already agrees. The Genie split in [[../Finance Semantic Layer Initial Plan 2026-09-08|the initial plan]] names one of its four agents **"Receivables & Collections"**, so the schema boundary and the agent boundary land in the same place.
+The consumption side already agrees. The Genie split in the initial plan (vault: `Finance Semantic Layer Initial Plan 2026-09-08`) names one of its four agents **"Receivables & Collections"**, so the schema boundary and the agent boundary land in the same place.
 
 Collections is also already an unnamed driver inside the DDL. `dim_customer.bank_name` carries the comment *"Carried because collections work needs it"* — the requirement was shaping columns before it had a home.
 
@@ -31,7 +31,7 @@ The epic's v1 non-goals include **"collections automation."** That excludes *doi
 
 ## What already serves collections
 
-All in `finance.receivables` unless noted, and all in [[Finance Catalog DDL|the DDL]] today.
+All in `finance.receivables` unless noted, and all in [the DDL](Finance%20Catalog%20DDL.md) today.
 
 | Object | What collections gets from it |
 |---|---|
@@ -42,7 +42,7 @@ All in `finance.receivables` unless noted, and all in [[Finance Catalog DDL|the 
 | `dim_collections_attributes` | CN00500 as a satellite on `dim_customer`: `credit_manager_id` (`CRDTMGR`), `credit_control_cycle`, `preferred_contact_method`, `no_mail_flag`, and `Time_Zone` — the last of which exists for call windows and nothing else |
 | `finance.identity.dim_customer` | Credit limit type and amount, balance type, statement cycle, on-hold, inactive |
 
-`business_area = collections` is already a value in the tag vocabulary defined by [[../../plans/2026-08-27-dynamics-gp-uc-metadata-plan|the GP UC metadata plan]], so the Phase 0 tagging work does not need a vocabulary change to label any of this.
+`business_area = collections` is already a value in the tag vocabulary defined by the GP UC metadata plan (vault: `plans/2026-08-27-dynamics-gp-uc-metadata-plan`), so the Phase 0 tagging work does not need a vocabulary change to label any of this.
 
 ## Four gaps, in order of cost
 
@@ -130,7 +130,7 @@ Worth noting that a row filter has the inverse risk profile from a mask: a mask 
 ## What this note does not change
 
 - No file under `ddl/` was edited. All eleven still carry `STATUS: NOT EXECUTED`.
-- No table was added to any schema, and the count in [[Finance Catalog DDL|Finance Catalog DDL]] is still 28.
+- No table was added to any schema, and the count in [Finance Catalog DDL](Finance%20Catalog%20DDL.md) is still 28.
 - No grant was added to `ddl/10-grants.sql`; `finance-collections` is proposed here only, and the existing group names in that file are still unconfirmed placeholders.
 - No RM00101 column was added to `dim_customer`. Gap 1 is a finding, not a fix.
 - `ddl/11-pii-masking-prepared-not-applied.sql` is untouched and still entirely commented.

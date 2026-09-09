@@ -13,7 +13,7 @@ updated: 2026-09-09
 > Every day without this snapshot is a day of history that **cannot be recovered**. `SY40100.CLOSED` is a current-state boolean and Fivetran overwrites it — GP records "is this period closed now" and never "was this period closed as of last Tuesday." Nine BO 2.0 vintage revenue measures need the second question. This should start collecting into a scratch schema **before the catalog exists and before Finance reviews anything**.
 
 > [!warning] Not built
-> DDL: [[../ddl/03-common-calendar.sql|03-common-calendar.sql]] · `STATUS: NOT EXECUTED`. See [[Table Specifications]].
+> DDL: [03-common-calendar.sql](../ddl/03-common-calendar.sql) · `STATUS: NOT EXECUTED`. See [Table Specifications](Table%20Specifications.md).
 
 | | |
 |---|---|
@@ -40,7 +40,7 @@ Series codes, per the GP metadata reference: `1` All, `2` Financial, `3` Sales, 
 | `period_number` | INT | No | `SY40100.PERIODID` | PK |
 | `series_id` | INT | No | `SY40100.SERIES` | PK. See the code list above |
 | `series_name` | STRING | Yes | Decoded | Decoded here rather than left to consumers, because the codes are not self-evident |
-| `fiscal_period_key` | BIGINT | Yes | Derived | FK to [[dim_fiscal_calendar]] at `period_level = 'period'` |
+| `fiscal_period_key` | BIGINT | Yes | Derived | FK to [dim_fiscal_calendar](dim_fiscal_calendar.md) at `period_level = 'period'` |
 | `is_closed` | BOOLEAN | No | `SY40100.CLOSED` | **As observed on `snapshot_date`. This is the whole point of the table** |
 | `period_start_date` | DATE | Yes | `SY40100.PERIODDT` | As observed, so a period boundary edited in GP shows up as a change rather than being silently overwritten |
 | `period_end_date` | DATE | Yes | `SY40100.PERDENDT` | As observed |
@@ -56,7 +56,7 @@ Series codes, per the GP metadata reference: `1` All, `2` Financial, `3` Sales, 
 | Tag | Value | Meaning |
 |---|---|---|
 | `append_only` | `true` | Never restate. A restatement destroys the only copy of the observation |
-| `irrecoverable_if_delayed` | `true` | The tag that distinguishes this from [[snap_ar_aging_daily]], which has a reconstruction fallback. **This one has none** |
+| `irrecoverable_if_delayed` | `true` | The tag that distinguishes this from [snap_ar_aging_daily](snap_ar_aging_daily.md), which has a reconstruction fallback. **This one has none** |
 | `grain` | `snapshot_date_x_legal_entity_x_period_x_series` | |
 
 ## The load
@@ -74,9 +74,9 @@ Series codes, per the GP metadata reference: `1` All, `2` Financial, `3` Sales, 
 
 | Join to | On | Cardinality | Notes |
 |---|---|---|---|
-| [[dim_fiscal_calendar]] | `s.fiscal_period_key = dfc.fiscal_period_key` | N:1 | |
-| [[mart_period_summary]] | `(legal_entity_code, fiscal_year, fiscal_period)` + `snapshot_date = as_of_date` + `series_id` | N:1 per series | This mart is the primary consumer. It reads series 2 and 3 into two separate columns — `financial_series_is_closed` and `sales_series_is_closed` — rather than one flag |
-| [[fact_gl_posting]] | `(legal_entity_code, fiscal_year, fiscal_period)` + `f.series_id = s.series_id` | N:M | The fact's `series_id` is the column that ties a posting to the close series governing it. **Joining without it is the classic error** |
+| [dim_fiscal_calendar](dim_fiscal_calendar.md) | `s.fiscal_period_key = dfc.fiscal_period_key` | N:1 | |
+| [mart_period_summary](mart_period_summary.md) | `(legal_entity_code, fiscal_year, fiscal_period)` + `snapshot_date = as_of_date` + `series_id` | N:1 per series | This mart is the primary consumer. It reads series 2 and 3 into two separate columns — `financial_series_is_closed` and `sales_series_is_closed` — rather than one flag |
+| [fact_gl_posting](fact_gl_posting.md) | `(legal_entity_code, fiscal_year, fiscal_period)` + `f.series_id = s.series_id` | N:M | The fact's `series_id` is the column that ties a posting to the close series governing it. **Joining without it is the classic error** |
 
 ### Series fan-out is the hazard
 
@@ -96,6 +96,6 @@ There are up to seven series rows per period. A close-state join that omits `ser
 
 ## Gotchas
 
-- **A null close state is honest.** Rows whose `as_of_date` predates the start of snapshotting carry NULL in [[mart_period_summary]] on purpose: before the snapshot existed, the answer is *unknown*, not *open*.
+- **A null close state is honest.** Rows whose `as_of_date` predates the start of snapshotting carry NULL in [mart_period_summary](mart_period_summary.md) on purpose: before the snapshot existed, the answer is *unknown*, not *open*.
 - **`_source_synced_at` is not freshness.** A stale value means the row has not changed, not that the connector is broken.
 - **Do not reconstruct this from `SY40100`.** There is nothing to reconstruct from. That is the entire reason the table exists.

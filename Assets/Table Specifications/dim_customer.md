@@ -14,7 +14,7 @@ updated: 2026-09-09
 > Names, addresses, phone, fax, bank name and branch, tax registration number. `finance.identity` is granted to `finance-pii-readers` **only**. Masking is deferred to a later phase by decision — that decision is about today's audience and holds only as long as the audience does.
 
 > [!warning] Not built
-> DDL: [[../ddl/05-finance-identity.sql|05-finance-identity.sql]] · `STATUS: NOT EXECUTED`. See [[Table Specifications]].
+> DDL: [05-finance-identity.sql](../ddl/05-finance-identity.sql) · `STATUS: NOT EXECUTED`. See [Table Specifications](Table%20Specifications.md).
 
 | | |
 |---|---|
@@ -29,7 +29,7 @@ updated: 2026-09-09
 
 GP's "customer" is **who APFM bills**. `great_plains_customer_mapping` resolves it at `business_unit_id` grain — a community. `dim_partner` is the conformed commercial counterparty in the shared design, so `dim_customer` is the **billing-account view of a partner** and bridges to `dim_partner` rather than competing with it. The tag `not_a_partner_master = 'true'` says so on the object, because the name will otherwise imply the opposite.
 
-[[bridge_customer_to_business_unit]] is the evidence: one GP customer can bill for several communities, and a community can change which customer bills it.
+[bridge_customer_to_business_unit](bridge_customer_to_business_unit.md) is the evidence: one GP customer can bill for several communities, and a community can change which customer bills it.
 
 **Open question for Finance:** whether any GP customers are families or private-pay individuals. That would change the grain rather than the label.
 
@@ -47,7 +47,7 @@ Fivetran replicates `RM00101` as **current state**, so no prior version of a cus
 |---|---|---|---|---|
 | `customer_key` | BIGINT | No | Derived | PK. `xxhash64(legal_entity_code, gp_customer_number)`. **Legal entity is in the key** because GP customer numbers are company-scoped — the same `CUSTNMBR` in APFM and CAPFM is not necessarily the same counterparty. Reserved members −1/−2/−3 |
 | `legal_entity_code` | STRING | Yes | Derived | Null on reserved members |
-| `legal_entity_key` | BIGINT | Yes | Derived | FK to [[dim_legal_entity]] |
+| `legal_entity_key` | BIGINT | Yes | Derived | FK to [dim_legal_entity](dim_legal_entity.md) |
 | `gp_customer_number` | STRING | Yes | `RM00101.CUSTNMBR` | **Trim before joining** — an untrimmed join to `ipr` or the YGL mapping silently returns nothing |
 | `parent_customer_number` | STRING | Yes | `RM00101.CPRCSTNM` | GP's parent/corporate customer — the closest thing GP has to a partner rollup. **Reconcile against `dim_partner` rather than using as a hierarchy on its own** |
 | `customer_name` | STRING | Yes | `RM00101.CUSTNAME` | PII |
@@ -68,7 +68,7 @@ Fivetran replicates `RM00101` as **current state**, so no prior version of a cus
 | `bank_name` | STRING | Yes | `RM00101.BANKNAME` | Financial PII. **Carried because collections work needs it; a candidate for the first mask** |
 | `bank_branch` | STRING | Yes | `RM00101.BNKBRNCH` | Financial PII |
 | `tax_registration_number` | STRING | Yes | `RM00101.TXRGNNUM` | Tax identifier. Financial PII |
-| `currency_key` | BIGINT | Yes | `RM00101.CURNCYID` | FK to [[dim_currency]] |
+| `currency_key` | BIGINT | Yes | `RM00101.CURNCYID` | FK to [dim_currency](dim_currency.md) |
 | `payment_terms_id` | STRING | Yes | `RM00101.PYMTRMID` | |
 | `salesperson_id` | STRING | Yes | `RM00101.SLPRSNID` | |
 | `sales_territory` | STRING | Yes | `RM00101.SALSTERR` | |
@@ -107,16 +107,16 @@ Fivetran replicates `RM00101` as **current state**, so no prior version of a cus
 
 | Join to | On | Cardinality | Notes |
 |---|---|---|---|
-| [[dim_legal_entity]] | `dc.legal_entity_key = le.legal_entity_key` | N:1 | |
-| [[dim_currency]] | `dc.currency_key = c.currency_key` | N:1 | |
-| [[fact_ar_transaction]] | `f.customer_key = dc.customer_key` | 1:N | The primary AR join |
-| [[fact_ar_apply]] | `f.customer_key = dc.customer_key` | 1:N | |
-| [[mart_ar_aging]], [[mart_writeoff]] | `m.customer_key = dc.customer_key` | 1:N | |
-| [[dim_collections_attributes]] | `dc.customer_key = dca.customer_key` | 1:0..1 | **`LEFT JOIN` only** — the satellite exists per CN00500 record, not per customer |
-| [[fact_referral_charge]] | `f.customer_key = dc.customer_key` | 1:N | **`LEFT JOIN`** from the fact — a null `customer_key` there is the unbilled-move-in population |
-| [[bridge_customer_to_family]] | `b.customer_key = dc.customer_key` | 1:N | **Many-to-many. Fan-out** |
-| [[bridge_customer_to_salesforce]] | `b.customer_key = dc.customer_key` | 1:N | **Many-to-many. Fan-out**, 22.19% match |
-| [[bridge_customer_to_business_unit]] | `b.customer_key = dc.customer_key` + effective-date predicate | 1:N | **Many-to-many, effective-dated** |
+| [dim_legal_entity](dim_legal_entity.md) | `dc.legal_entity_key = le.legal_entity_key` | N:1 | |
+| [dim_currency](dim_currency.md) | `dc.currency_key = c.currency_key` | N:1 | |
+| [fact_ar_transaction](fact_ar_transaction.md) | `f.customer_key = dc.customer_key` | 1:N | The primary AR join |
+| [fact_ar_apply](fact_ar_apply.md) | `f.customer_key = dc.customer_key` | 1:N | |
+| [mart_ar_aging](mart_ar_aging.md), [mart_writeoff](mart_writeoff.md) | `m.customer_key = dc.customer_key` | 1:N | |
+| [dim_collections_attributes](dim_collections_attributes.md) | `dc.customer_key = dca.customer_key` | 1:0..1 | **`LEFT JOIN` only** — the satellite exists per CN00500 record, not per customer |
+| [fact_referral_charge](fact_referral_charge.md) | `f.customer_key = dc.customer_key` | 1:N | **`LEFT JOIN`** from the fact — a null `customer_key` there is the unbilled-move-in population |
+| [bridge_customer_to_family](bridge_customer_to_family.md) | `b.customer_key = dc.customer_key` | 1:N | **Many-to-many. Fan-out** |
+| [bridge_customer_to_salesforce](bridge_customer_to_salesforce.md) | `b.customer_key = dc.customer_key` | 1:N | **Many-to-many. Fan-out**, 22.19% match |
+| [bridge_customer_to_business_unit](bridge_customer_to_business_unit.md) | `b.customer_key = dc.customer_key` + effective-date predicate | 1:N | **Many-to-many, effective-dated** |
 | `dim_partner` | `dc.partner_key = dp.partner_key` | N:1 | **Does not exist yet.** No FK declared |
 
 ### Joining a customer to itself: the parent rollup
@@ -133,11 +133,11 @@ But treat the result as a **candidate** rollup to reconcile against `dim_partner
 
 ### The three bridges cannot be joined together
 
-Chaining [[bridge_customer_to_family]] to [[bridge_customer_to_salesforce]] through `customer_key` multiplies the fan-out of both. A customer with 3 families and 2 Salesforce ids yields 6 rows. If a query needs both, aggregate each bridge to one row per customer first.
+Chaining [bridge_customer_to_family](bridge_customer_to_family.md) to [bridge_customer_to_salesforce](bridge_customer_to_salesforce.md) through `customer_key` multiplies the fan-out of both. A customer with 3 families and 2 Salesforce ids yields 6 rows. If a query needs both, aggregate each bridge to one row per customer first.
 
 ## Gotchas
 
-- **A credit limit is not PII, but it lives here.** `credit_limit_amount`, `balance_type` and `statement_cycle` are non-PII policy attributes sitting in a PII-restricted schema, so a collections analyst needs a PII grant to read a credit limit. See [[../Collections in the Finance Catalog|Collections in the Finance Catalog]] — the proposed fix is a projection view in `finance.receivables`, not moving columns.
+- **A credit limit is not PII, but it lives here.** `credit_limit_amount`, `balance_type` and `statement_cycle` are non-PII policy attributes sitting in a PII-restricted schema, so a collections analyst needs a PII grant to read a credit limit. See [Collections in the Finance Catalog](../Collections%20in%20the%20Finance%20Catalog.md) — the proposed fix is a projection view in `finance.receivables`, not moving columns.
 - **Keep Genie agents pointed at the marts, not here.** Column masks on `RM00101` disable entity matching, so an agent tuned against an unmasked `dim_customer` is invalidated the day masking arrives.
 - **`_source_synced_at` is not freshness.**
 - **Type 1 means yesterday's credit limit is gone.** Any question about *when* a limit changed is unanswerable and will stay unanswerable until a snapshot starts collecting.

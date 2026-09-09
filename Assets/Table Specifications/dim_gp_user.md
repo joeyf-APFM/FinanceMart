@@ -10,7 +10,7 @@ updated: 2026-09-09
 # finance.reference.dim_gp_user
 
 > [!warning] Not built
-> DDL: [[../ddl/04-finance-reference.sql|04-finance-reference.sql]] · `STATUS: NOT EXECUTED`. See [[Table Specifications]].
+> DDL: [04-finance-reference.sql](../ddl/04-finance-reference.sql) · `STATUS: NOT EXECUTED`. See [Table Specifications](Table%20Specifications.md).
 
 | | |
 |---|---|
@@ -59,11 +59,11 @@ The tag `excludes_source_columns = 'PASSWORD'` states that on the object. `conta
 
 | Fact | User columns | GP source |
 |---|---|---|
-| [[fact_gl_posting]] | `posted_by_user_id`, `last_modified_by_user_id`, `approval_user_id` | `USWHPSTD`, `LASTUSER`, `APPRVLDT`-paired approver |
-| [[fact_gl_posting_work]] | `posted_by_user_id`, `last_modified_by_user_id`, `approval_user_id` | same |
-| [[fact_ar_transaction]] | `posted_by_user_id`, `last_edited_by_user_id` | `PSTUSRID`, `LSTUSRED` |
-| [[fact_ar_apply]] | `posted_by_user_id` | `PSTUSRID` |
-| [[fact_plan_adjustment]] | `posted_by_user_id`, `last_user_id` | |
+| [fact_gl_posting](fact_gl_posting.md) | `posted_by_user_id`, `last_modified_by_user_id`, `approval_user_id` | `USWHPSTD`, `LASTUSER`, `APPRVLDT`-paired approver |
+| [fact_gl_posting_work](fact_gl_posting_work.md) | `posted_by_user_id`, `last_modified_by_user_id`, `approval_user_id` | same |
+| [fact_ar_transaction](fact_ar_transaction.md) | `posted_by_user_id`, `last_edited_by_user_id` | `PSTUSRID`, `LSTUSRED` |
+| [fact_ar_apply](fact_ar_apply.md) | `posted_by_user_id` | `PSTUSRID` |
+| [fact_plan_adjustment](fact_plan_adjustment.md) | `posted_by_user_id`, `last_user_id` | |
 
 ### Join it once per role, under an alias
 

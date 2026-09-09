@@ -10,11 +10,11 @@ updated: 2026-09-09
 # finance.receivables.dim_collections_attributes
 
 > [!warning] Not built
-> DDL: [[../ddl/07-finance-receivables.sql|07-finance-receivables.sql]] · `STATUS: NOT EXECUTED`. See [[Table Specifications]] and [[../Collections in the Finance Catalog|Collections in the Finance Catalog]].
+> DDL: [07-finance-receivables.sql](../ddl/07-finance-receivables.sql) · `STATUS: NOT EXECUTED`. See [Table Specifications](Table%20Specifications.md) and [Collections in the Finance Catalog](../Collections%20in%20the%20Finance%20Catalog.md).
 
 | | |
 |---|---|
-| **Type** | Dimension — a **satellite** on [[dim_customer]] |
+| **Type** | Dimension — a **satellite** on [dim_customer](dim_customer.md) |
 | **Grain** | **One row per customer that has a `CN00500` record — not one per customer** |
 | **Source** | `CN00500` (Collections Management add-on) |
 | **History** | Type 1 — current state only from the replica |
@@ -26,13 +26,13 @@ updated: 2026-09-09
 
 > **Absence of a row means no `CN00500` record exists, which is different from an attribute being blank** — a distinction that merging would destroy.
 
-**Profile the population rate before building anything on top of this.** The [[../Collections in the Finance Catalog|collections placement note]] carries the query for that; it has not been run.
+**Profile the population rate before building anything on top of this.** The [collections placement note](../Collections%20in%20the%20Finance%20Catalog.md) carries the query for that; it has not been run.
 
 ## Columns
 
 | Column | Type | Null | Source | Notes |
 |---|---|---|---|---|
-| `customer_key` | BIGINT | No | Derived | **PK and FK to [[dim_customer]].** One row per customer *with a record* |
+| `customer_key` | BIGINT | No | Derived | **PK and FK to [dim_customer](dim_customer.md).** One row per customer *with a record* |
 | `legal_entity_code` | STRING | No | Derived | APFM or CAPFM |
 | `gp_customer_number` | STRING | No | `CN00500.CUSTNMBR` | Trimmed |
 | `credit_manager_id` | STRING | Yes | `CN00500.CRDTMGR` | **Who owns the collections relationship** |
@@ -57,11 +57,11 @@ updated: 2026-09-09
 
 | Join to | On | Cardinality | Notes |
 |---|---|---|---|
-| [[dim_customer]] | `ca.customer_key = dc.customer_key` | 1:1 **partial** | Declared FK. **`LEFT JOIN` from the customer, always** |
-| [[mart_ar_aging]] | `ca.customer_key = m.customer_key` | 1:N | `LEFT JOIN`. Aging plus who owns the relationship |
-| [[mart_writeoff]] | `ca.customer_key = w.customer_key` | 1:N | `LEFT JOIN` |
-| [[fact_ar_transaction]] | `ca.customer_key = f.customer_key` | 1:N | `LEFT JOIN` |
-| [[bridge_customer_to_business_unit]] | via `customer_key`, as-of | 1:N | **Fan-out and as-of.** Collections attributes are billing-account grain, communities are not |
+| [dim_customer](dim_customer.md) | `ca.customer_key = dc.customer_key` | 1:1 **partial** | Declared FK. **`LEFT JOIN` from the customer, always** |
+| [mart_ar_aging](mart_ar_aging.md) | `ca.customer_key = m.customer_key` | 1:N | `LEFT JOIN`. Aging plus who owns the relationship |
+| [mart_writeoff](mart_writeoff.md) | `ca.customer_key = w.customer_key` | 1:N | `LEFT JOIN` |
+| [fact_ar_transaction](fact_ar_transaction.md) | `ca.customer_key = f.customer_key` | 1:N | `LEFT JOIN` |
+| [bridge_customer_to_business_unit](bridge_customer_to_business_unit.md) | via `customer_key`, as-of | 1:N | **Fan-out and as-of.** Collections attributes are billing-account grain, communities are not |
 
 ### `LEFT JOIN`, never `INNER JOIN` — and the whole point is the null
 
@@ -101,7 +101,7 @@ WHERE coalesce(ca.no_mail_flag, false) = false
 ## Gotchas
 
 - **The population rate is unmeasured.** Every figure derived from this table is bounded by a number nobody has yet run the query for.
-- **`credit_manager_id` is not a [[dim_gp_user]] key by declaration.** If it holds a GP user id, join `trim()`-to-`trim()`; if it holds free text, it does not join at all. Profile it.
+- **`credit_manager_id` is not a [dim_gp_user](dim_gp_user.md) key by declaration.** If it holds a GP user id, join `trim()`-to-`trim()`; if it holds free text, it does not join at all. Profile it.
 - **`USRTAB01` and `USRTAB09` are undocumented and the numbering implies 02–08 exist and were not carried.** If a consumer needs one, add it deliberately rather than assuming the gap was an oversight.
 - **Type 1.** A credit manager reassigned last month appears as the owner of every historical write-off.
-- **`CN00500` is one of several CN tables.** The others — collections notes, activities, credit-control cycles — are covered in [[../Collections in the Finance Catalog|Collections in the Finance Catalog]] and are **not** in this DDL.
+- **`CN00500` is one of several CN tables.** The others — collections notes, activities, credit-control cycles — are covered in [Collections in the Finance Catalog](../Collections%20in%20the%20Finance%20Catalog.md) and are **not** in this DDL.

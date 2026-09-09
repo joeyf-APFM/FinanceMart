@@ -13,7 +13,7 @@ updated: 2026-09-09
 > **`SOP30200`, the sales document HEADER history table, is not in the replica.** Only `sop30300` (line history) is. The consequence is not cosmetic: **there is no reliable document-level customer, document date, void status, or salesperson for an invoice.** Each of those absences is labelled on the columns below rather than left for a consumer to discover when a total comes out wrong.
 
 > [!warning] Not built · APFM only
-> DDL: [[../ddl/08-finance-billing.sql|08-finance-billing.sql]] · `STATUS: NOT EXECUTED`. See [[Table Specifications]].
+> DDL: [08-finance-billing.sql](../ddl/08-finance-billing.sql) · `STATUS: NOT EXECUTED`. See [Table Specifications](Table%20Specifications.md).
 >
 > `sop30300` is **absent from `prod_gp_capfm_dbo`**, so this fact covers **one legal entity**. Stamped in the table comment and in a tag, because *"a consumer comparing invoiced amounts across entities will otherwise read CAPFM's absence as zero."*
 
@@ -41,12 +41,12 @@ updated: 2026-09-09
 |---|---|---|---|---|
 | `invoice_line_key` | BIGINT | No | Derived | PK. `xxhash64(legal_entity_code, sop_type, sop_number, line_item_sequence, component_sequence)`. **`component_sequence` is in the key because `sop30300` uses it for kit components, and omitting it collapses distinct lines** |
 | `legal_entity_code` | STRING | No | Literal | **APFM only** |
-| `legal_entity_key` | BIGINT | Yes | Derived | FK to [[dim_legal_entity]] |
+| `legal_entity_key` | BIGINT | Yes | Derived | FK to [dim_legal_entity](dim_legal_entity.md) |
 | `sop_type` | INT | No | `SOPTYPE` | Quote, order, invoice, return, back order. **Filter to invoices explicitly — this table holds all types and a total across them is meaningless** |
 | `sop_number` | STRING | No | `SOPNUMBE` | The document number, **and the join key to `ipr_invoice.gp_invoice_num`** |
 | `line_item_sequence` | BIGINT | No | `LNITMSEQ` | |
 | `component_sequence` | BIGINT | No | `CMPNTSEQ` | Non-zero for kit components |
-| `customer_key` | BIGINT | Yes | **Resolved indirectly** | FK to [[dim_customer]]. **`SOP30200` is not replicated and `sop30300` carries no `CUSTNMBR`.** Path: `sop_number` → `ipr_invoice.gp_invoice_num` → `ipr.fin_customer_id`. **Only as good as the IPR bridge — 98.7% / 60.6%** |
+| `customer_key` | BIGINT | Yes | **Resolved indirectly** | FK to [dim_customer](dim_customer.md). **`SOP30200` is not replicated and `sop30300` carries no `CUSTNMBR`.** Path: `sop_number` → `ipr_invoice.gp_invoice_num` → `ipr.fin_customer_id`. **Only as good as the IPR bridge — 98.7% / 60.6%** |
 | `gp_customer_number` | STRING | Yes | Resolved as above | **Never present this as authoritative document-level customer; it is an inference from the charging platform** |
 | `ship_to_name` | STRING | Yes | `ShipToName` | **PII.** The one name `sop30300` carries directly, and it is a **ship-to rather than a bill-to — NOT a substitute for the header customer** |
 | `ship_to_address_code` | STRING | Yes | `PRSTADCD` | |
@@ -55,7 +55,7 @@ updated: 2026-09-09
 | `requested_ship_date` | DATE | Yes | `ReqShipDate` | Blank-date sentinel → NULL |
 | `fulfilled_date` | DATE | Yes | `FUFILDAT` | |
 | `actual_ship_date` | DATE | Yes | `ACTLSHIP` | **THE CLOSEST AVAILABLE PROXY FOR A DOCUMENT DATE, and it is a proxy** — the real document date is on `SOP30200`. **Label it as a ship date wherever it is surfaced. Do not silently present it as the invoice date** |
-| `date_key` | INT | Yes | Derived on `actual_ship_date` | FK to [[dim_date]], **with the proxy caveat above** |
+| `date_key` | INT | Yes | Derived on `actual_ship_date` | FK to [dim_date](dim_date.md), **with the proxy caveat above** |
 | `item_number` | STRING | Yes | `ITEMNMBR` | |
 | `item_description` | STRING | Yes | `ITEMDESC` | |
 | `unit_of_measure` | STRING | Yes | `UOFM` | |
@@ -69,10 +69,10 @@ updated: 2026-09-09
 | `tax_amount` | DECIMAL(19,5) | Yes | `TAXAMNT` | |
 | `trade_discount_amount` | DECIMAL(19,5) | Yes | `TRDISAMT` | |
 | `markdown_amount` | DECIMAL(19,5) | Yes | `MRKDNAMT` | |
-| `sales_account_index` | INT | Yes | `SLSINDX` | **How an invoice line ties to the account it credited.** Joins to [[dim_gl_account]] |
+| `sales_account_index` | INT | Yes | `SLSINDX` | **How an invoice line ties to the account it credited.** Joins to [dim_gl_account](dim_gl_account.md) |
 | `cost_of_sales_account_index` | INT | Yes | `CSLSINDX` | |
 | `currency_index` | INT | Yes | `CURRNIDX` | |
-| `currency_key` | BIGINT | Yes | Derived from `CURRNIDX` | FK to [[dim_currency]] |
+| `currency_key` | BIGINT | Yes | Derived from `CURRNIDX` | FK to [dim_currency](dim_currency.md) |
 | `decimal_places_currency` | INT | Yes | `DECPLCUR` | **A one-based offset, so 3 means 2 decimal places. Read it rather than assuming two** |
 | `salesperson_id` | STRING | Yes | `SLPRSNID` | **Present at LINE level.** The document-level salesperson is on `SOP30200` and unavailable, **so a per-document salesperson has to be inferred from its lines and can disagree across them** |
 | `sales_territory` | STRING | Yes | `SALSTERR` | |
@@ -81,7 +81,7 @@ updated: 2026-09-09
 | `line_error_code` | INT | Yes | `SOPLNERR` | |
 | `is_non_inventory` | BOOLEAN | Yes | `NONINVEN` | **Expected true for most APFM lines** — referral fees are not stocked goods |
 | `void_status` | STRING | Yes | — | **DELIBERATELY NULL AND KEPT AS A COLUMN.** `sop30300` carries no void flag; void status is on `SOP30200`. *"The column exists so the gap is visible in the schema instead of being an unstated assumption that nothing here is voided"* |
-| `referral_charge_key` | BIGINT | Yes | Derived | FK to [[fact_referral_charge]] where matched |
+| `referral_charge_key` | BIGINT | Yes | Derived | FK to [fact_referral_charge](fact_referral_charge.md) where matched |
 | `is_ipr_matched` | BOOLEAN | No | Derived | Whether this line's document appears in `ipr_invoice`. **Carried as data so the ceiling is visible in every aggregate** |
 | `source_system` | STRING | No | Literal | `GP` |
 | `source_table` | STRING | No | Literal | `main.prod_gp_apfm_dbo_live.sop30300` |
@@ -105,15 +105,15 @@ updated: 2026-09-09
 
 | Join to | On | Cardinality | Notes |
 |---|---|---|---|
-| [[dim_customer]] | `il.customer_key = dc.customer_key` | N:1 | Declared FK. **`LEFT JOIN` — the resolution is an inference with a 60.6% ceiling** |
-| [[fact_referral_charge]] | `il.referral_charge_key = rc.referral_charge_key` | N:1 | Declared FK. `LEFT JOIN` |
-| [[dim_currency]] | `il.currency_key = c.currency_key` | N:1 | Declared FK |
-| [[dim_gl_account]] | `a.legal_entity_code = il.legal_entity_code AND a.account_index = il.sales_account_index` | N:1 | **No surrogate on this fact — natural-key join, entity included** |
-| [[dim_date]] | `il.date_key = d.date_key` | N:1 | **On a ship-date proxy.** Label it as such |
-| [[dim_legal_entity]] | `il.legal_entity_key = le.legal_entity_key` | N:1 | Always APFM |
-| [[fact_gl_posting]] | `trim(g.trx_source) = trim(il.trx_source)` + entity | N:M | The subledger tie |
-| [[mart_billing_by_stream]] | This fact is one of its two sources | — | Aggregate |
-| [[fact_ar_transaction]] | via `sop_number` ↔ `document_number` | N:1 | **Unverified.** Profile before relying on it |
+| [dim_customer](dim_customer.md) | `il.customer_key = dc.customer_key` | N:1 | Declared FK. **`LEFT JOIN` — the resolution is an inference with a 60.6% ceiling** |
+| [fact_referral_charge](fact_referral_charge.md) | `il.referral_charge_key = rc.referral_charge_key` | N:1 | Declared FK. `LEFT JOIN` |
+| [dim_currency](dim_currency.md) | `il.currency_key = c.currency_key` | N:1 | Declared FK |
+| [dim_gl_account](dim_gl_account.md) | `a.legal_entity_code = il.legal_entity_code AND a.account_index = il.sales_account_index` | N:1 | **No surrogate on this fact — natural-key join, entity included** |
+| [dim_date](dim_date.md) | `il.date_key = d.date_key` | N:1 | **On a ship-date proxy.** Label it as such |
+| [dim_legal_entity](dim_legal_entity.md) | `il.legal_entity_key = le.legal_entity_key` | N:1 | Always APFM |
+| [fact_gl_posting](fact_gl_posting.md) | `trim(g.trx_source) = trim(il.trx_source)` + entity | N:M | The subledger tie |
+| [mart_billing_by_stream](mart_billing_by_stream.md) | This fact is one of its two sources | — | Aggregate |
+| [fact_ar_transaction](fact_ar_transaction.md) | via `sop_number` ↔ `document_number` | N:1 | **Unverified.** Profile before relying on it |
 
 ### Filter `sop_type` before anything else
 

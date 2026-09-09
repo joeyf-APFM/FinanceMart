@@ -10,7 +10,7 @@ updated: 2026-09-09
 # common.calendar.dim_date
 
 > [!warning] Not built — and this one is a **promotion**, not a new build
-> DDL: [[../ddl/03-common-calendar.sql|03-common-calendar.sql]], where every statement for this table is commented out. See [[Table Specifications]].
+> DDL: [03-common-calendar.sql](../ddl/03-common-calendar.sql), where every statement for this table is commented out. See [Table Specifications](Table%20Specifications.md).
 
 | | |
 |---|---|
@@ -38,7 +38,7 @@ Then promote as-is with `CREATE TABLE ... AS SELECT * FROM main.prod_refined.dim
 
 | Column | Type | Null | Source | Notes |
 |---|---|---|---|---|
-| `fiscal_period_key` | BIGINT | Yes | Derived | FK to [[dim_fiscal_calendar]] at `period_level = 'period'`. Added by `ALTER TABLE` after promotion. `dim_date` **references** its fiscal period rather than absorbing the period's attributes, because a calendar date is immutable and a period's close state is not |
+| `fiscal_period_key` | BIGINT | Yes | Derived | FK to [dim_fiscal_calendar](dim_fiscal_calendar.md) at `period_level = 'period'`. Added by `ALTER TABLE` after promotion. `dim_date` **references** its fiscal period rather than absorbing the period's attributes, because a calendar date is immutable and a period's close state is not |
 
 Plus two constraint changes: `date_key` set `NOT NULL`, and `pk_dim_date PRIMARY KEY (date_key)`.
 
@@ -52,12 +52,12 @@ Plus two constraint changes: `date_key` set `NOT NULL`, and `pk_dim_date PRIMARY
 
 | Join to | On | Cardinality | Notes |
 |---|---|---|---|
-| [[dim_fiscal_calendar]] | `dim_date.fiscal_period_key = dfc.fiscal_period_key` | N:1 | Filter `dfc.period_level = 'period'`. Without the filter, the quarter and year rollup rows join too and every date fans out threefold |
-| [[fact_gl_posting]] | `f.date_key = d.date_key` | 1:N | `date_key` is built on `transaction_date`, **not** `document_date` or `originating_post_date` |
-| [[fact_ar_transaction]] | `f.date_key = d.date_key` | 1:N | Built on `document_date` |
-| [[fact_ar_apply]] | `f.date_key = d.date_key` | 1:N | Built on `apply_date` |
-| [[fact_invoice_line]] | `f.date_key = d.date_key` | 1:N | Built on `actual_ship_date`, which is a **proxy** — the real document date lives on the unreplicated SOP30200 |
-| [[fact_referral_charge]], [[fact_plan_adjustment]], [[fact_gl_posting_work]] | `f.date_key = d.date_key` | 1:N | On `charge_date`, `transaction_date`, `transaction_date` respectively |
+| [dim_fiscal_calendar](dim_fiscal_calendar.md) | `dim_date.fiscal_period_key = dfc.fiscal_period_key` | N:1 | Filter `dfc.period_level = 'period'`. Without the filter, the quarter and year rollup rows join too and every date fans out threefold |
+| [fact_gl_posting](fact_gl_posting.md) | `f.date_key = d.date_key` | 1:N | `date_key` is built on `transaction_date`, **not** `document_date` or `originating_post_date` |
+| [fact_ar_transaction](fact_ar_transaction.md) | `f.date_key = d.date_key` | 1:N | Built on `document_date` |
+| [fact_ar_apply](fact_ar_apply.md) | `f.date_key = d.date_key` | 1:N | Built on `apply_date` |
+| [fact_invoice_line](fact_invoice_line.md) | `f.date_key = d.date_key` | 1:N | Built on `actual_ship_date`, which is a **proxy** — the real document date lives on the unreplicated SOP30200 |
+| [fact_referral_charge](fact_referral_charge.md), [fact_plan_adjustment](fact_plan_adjustment.md), [fact_gl_posting_work](fact_gl_posting_work.md) | `f.date_key = d.date_key` | 1:N | On `charge_date`, `transaction_date`, `transaction_date` respectively |
 
 ### Role-playing: one `date_key` is not enough
 
@@ -70,7 +70,7 @@ JOIN common.calendar.dim_date dd_due
 
 or predicates directly on `f.due_date` and skips the dimension. Both are fine; mixing them across reports is not.
 
-The same applies to [[fact_gl_posting]] (`transaction_date` vs `document_date` vs `originating_post_date`) and [[fact_ar_apply]] (`apply_date` vs both apply-from and apply-to document dates and GL post dates).
+The same applies to [fact_gl_posting](fact_gl_posting.md) (`transaction_date` vs `document_date` vs `originating_post_date`) and [fact_ar_apply](fact_ar_apply.md) (`apply_date` vs both apply-from and apply-to document dates and GL post dates).
 
 ## Do not run yet: deprecating the existing copies
 

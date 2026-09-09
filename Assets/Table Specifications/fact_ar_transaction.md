@@ -10,7 +10,7 @@ updated: 2026-09-09
 # finance.receivables.fact_ar_transaction
 
 > [!warning] Not built
-> DDL: [[../ddl/07-finance-receivables.sql|07-finance-receivables.sql]] · `STATUS: NOT EXECUTED`. See [[Table Specifications]].
+> DDL: [07-finance-receivables.sql](../ddl/07-finance-receivables.sql) · `STATUS: NOT EXECUTED`. See [Table Specifications](Table%20Specifications.md).
 
 | | |
 |---|---|
@@ -30,11 +30,11 @@ updated: 2026-09-09
 | `DISAVTKN` | ✅ | ❌ |
 | `BALFWDNM` | ❌ | ✅ |
 
-The `AGNGBUKT` asymmetry is the one that matters: **GP's bucket assignment exists only for open documents**, so the bucket reconciliation that [[mart_ar_aging]] depends on (**T-09**) can be validated against open documents only. Reconstructed historical aging has no GP bucket to check itself against.
+The `AGNGBUKT` asymmetry is the one that matters: **GP's bucket assignment exists only for open documents**, so the bucket reconciliation that [mart_ar_aging](mart_ar_aging.md) depends on (**T-09**) can be validated against open documents only. Reconstructed historical aging has no GP bucket to check itself against.
 
 ## `current_amount` is current state, and that corrects the initial plan
 
-GP moves a document out of `rm20101` once fully applied, so today's open file cannot answer *"what was aged 60+ last March."* **That looks unrecoverable and is not** — [[fact_ar_apply]] carries `DATE1`, `GLPOSTDT`, `APTODCDT`, `ApplyToGLPostDate` and `APPTOAMT`, so:
+GP moves a document out of `rm20101` once fully applied, so today's open file cannot answer *"what was aged 60+ last March."* **That looks unrecoverable and is not** — [fact_ar_apply](fact_ar_apply.md) carries `DATE1`, `GLPOSTDT`, `APTODCDT`, `ApplyToGLPostDate` and `APPTOAMT`, so:
 
 > outstanding as of **D** = `original_amount` − applies dated on or before **D**
 
@@ -46,8 +46,8 @@ GP moves a document out of `rm20101` once fully applied, so today's open file ca
 |---|---|---|---|---|
 | `ar_transaction_key` | BIGINT | No | Derived | PK. `xxhash64(legal_entity_code, gp_customer_number, document_type_code, document_number)`. **T-07** must confirm uniqueness across the union |
 | `legal_entity_code` | STRING | No | Derived | APFM or CAPFM |
-| `legal_entity_key` | BIGINT | Yes | Derived | FK to [[dim_legal_entity]] |
-| `customer_key` | BIGINT | Yes | Derived | FK to [[dim_customer]] |
+| `legal_entity_key` | BIGINT | Yes | Derived | FK to [dim_legal_entity](dim_legal_entity.md) |
+| `customer_key` | BIGINT | Yes | Derived | FK to [dim_customer](dim_customer.md) |
 | `gp_customer_number` | STRING | No | `CUSTNMBR` | **Trimmed. GP char columns are space-padded and an untrimmed join returns nothing** |
 | `parent_customer_number` | STRING | Yes | `CPRCSTNM` | |
 | `document_number` | STRING | No | `DOCNUMBR` | |
@@ -56,12 +56,12 @@ GP moves a document out of `rm20101` once fully applied, so today's open file ca
 | `document_date` | DATE | Yes | `DOCDATE` | Blank-date sentinel → NULL |
 | `due_date` | DATE | Yes | `DUEDATE` | **The basis for every aging calculation.** A null puts a document in no bucket and must be surfaced, not defaulted |
 | `post_date` | DATE | Yes | `POSTDATE` | |
-| `gl_post_date` | DATE | Yes | `GLPOSTDT` | **What reconciles this fact to [[fact_gl_posting]]** |
+| `gl_post_date` | DATE | Yes | `GLPOSTDT` | **What reconciles this fact to [fact_gl_posting](fact_gl_posting.md)** |
 | `sale_date` | DATE | Yes | `SALEDATE` | |
 | `discount_date` | DATE | Yes | `DISCDATE` | |
 | `date_paid_off` | DATE | Yes | `DINVPDOF` | Populated when fully applied — **the boundary between the open and history tables** |
-| `date_key` | INT | Yes | Derived on `document_date` | FK to [[dim_date]] |
-| `fiscal_period_key` | BIGINT | Yes | Derived on `gl_post_date` | FK to [[dim_fiscal_calendar]] |
+| `date_key` | INT | Yes | Derived on `document_date` | FK to [dim_date](dim_date.md) |
+| `fiscal_period_key` | BIGINT | Yes | Derived on `gl_post_date` | FK to [dim_fiscal_calendar](dim_fiscal_calendar.md) |
 | `original_amount` | DECIMAL(19,5) | Yes | `ORTRXAMT` | The document as issued. **The numerator for as-of aging reconstruction** |
 | `current_amount` | DECIMAL(19,5) | Yes | `CURTRXAM` | **Outstanding as of the last sync — current state only** |
 | `sales_amount` | DECIMAL(19,5) | Yes | `SLSAMNT` | |
@@ -73,11 +73,11 @@ GP moves a document out of `rm20101` once fully applied, so today's open file ca
 | `cash_amount` | DECIMAL(19,5) | Yes | `CASHAMNT` | |
 | `discount_taken_amount` | DECIMAL(19,5) | Yes | `DISTKNAM` | |
 | `discount_available_amount` | DECIMAL(19,5) | Yes | `DISAVAMT` | |
-| `writeoff_amount` | DECIMAL(19,5) | Yes | `WROFAMNT` | **Document level: "how much of this document was written off."** For *when*, use [[fact_ar_apply]] |
+| `writeoff_amount` | DECIMAL(19,5) | Yes | `WROFAMNT` | **Document level: "how much of this document was written off."** For *when*, use [fact_ar_apply](fact_ar_apply.md) |
 | `commission_amount` | DECIMAL(19,5) | Yes | `COMDLRAM` | |
-| `currency_key` | BIGINT | Yes | Derived | FK to [[dim_currency]] |
+| `currency_key` | BIGINT | Yes | Derived | FK to [dim_currency](dim_currency.md) |
 | `gp_currency_id` | STRING | Yes | `CURNCYID` | |
-| `gp_aging_bucket` | STRING | Yes | `rm20101.AGNGBUKT` | **NULL for every `rm30101` row.** The only independent check on [[mart_ar_aging]]'s cutoffs, available for open documents only |
+| `gp_aging_bucket` | STRING | Yes | `rm20101.AGNGBUKT` | **NULL for every `rm30101` row.** The only independent check on [mart_ar_aging](mart_ar_aging.md)'s cutoffs, available for open documents only |
 | `payment_terms_id` | STRING | Yes | `PYMTRMID` | |
 | `salesperson_id` | STRING | Yes | `SLPRSNID` | |
 | `sales_territory` | STRING | Yes | `SLSTERCD` | |
@@ -94,7 +94,7 @@ GP moves a document out of `rm20101` once fully applied, so today's open file ca
 | `is_direct_debit` | BOOLEAN | Yes | `DIRECTDEBIT` | |
 | `is_electronic` | BOOLEAN | Yes | `Electronic` | |
 | `is_factored` | BOOLEAN | Yes | `Factoring` | |
-| `posted_by_user_id` | STRING | Yes | `PSTUSRID` | Joins to [[dim_gp_user]] |
+| `posted_by_user_id` | STRING | Yes | `PSTUSRID` | Joins to [dim_gp_user](dim_gp_user.md) |
 | `last_edited_by_user_id` | STRING | Yes | `LSTUSRED` | |
 | `is_history` | BOOLEAN | No | Derived | True from `rm30101`. **A document's presence in history is itself the fact that it was settled** |
 | `source_system` | STRING | No | Literal | `GP` |
@@ -116,16 +116,16 @@ GP moves a document out of `rm20101` once fully applied, so today's open file ca
 
 | Join to | On | Cardinality | Notes |
 |---|---|---|---|
-| [[dim_customer]] | `f.customer_key = dc.customer_key` | N:1 | Declared FK. **PII-restricted schema** |
-| [[dim_legal_entity]] | `f.legal_entity_key = le.legal_entity_key` | N:1 | Declared FK |
-| [[dim_currency]] | `f.currency_key = c.currency_key` | N:1 | Declared FK |
-| [[dim_fiscal_calendar]] | `f.fiscal_period_key = dfc.fiscal_period_key` | N:1 | Declared FK. Filter `period_level = 'period'` |
-| [[dim_date]] | `f.date_key = d.date_key` | N:1 | **On `document_date` only** — see below |
-| [[fact_ar_apply]] | `ap.apply_to_transaction_key = f.ar_transaction_key` | 1:N | **The join that turns the apply trail into aging history** |
-| [[dim_collections_attributes]] | `f.customer_key = ca.customer_key` | N:1 | **`LEFT JOIN` only.** Sparse satellite |
-| [[fact_gl_posting]] | `trim(g.trx_source) = trim(f.trx_source)` + entity | N:M | The subledger tie. Answers *"what is behind this batch"* |
-| [[snap_ar_aging_daily]] | `s.ar_transaction_key = f.ar_transaction_key` | 1:N | One row per snapshot date |
-| [[mart_ar_aging]] | `(legal_entity_code, gp_customer_number)` | N:M | Aggregate — customer grain, not document grain |
+| [dim_customer](dim_customer.md) | `f.customer_key = dc.customer_key` | N:1 | Declared FK. **PII-restricted schema** |
+| [dim_legal_entity](dim_legal_entity.md) | `f.legal_entity_key = le.legal_entity_key` | N:1 | Declared FK |
+| [dim_currency](dim_currency.md) | `f.currency_key = c.currency_key` | N:1 | Declared FK |
+| [dim_fiscal_calendar](dim_fiscal_calendar.md) | `f.fiscal_period_key = dfc.fiscal_period_key` | N:1 | Declared FK. Filter `period_level = 'period'` |
+| [dim_date](dim_date.md) | `f.date_key = d.date_key` | N:1 | **On `document_date` only** — see below |
+| [fact_ar_apply](fact_ar_apply.md) | `ap.apply_to_transaction_key = f.ar_transaction_key` | 1:N | **The join that turns the apply trail into aging history** |
+| [dim_collections_attributes](dim_collections_attributes.md) | `f.customer_key = ca.customer_key` | N:1 | **`LEFT JOIN` only.** Sparse satellite |
+| [fact_gl_posting](fact_gl_posting.md) | `trim(g.trx_source) = trim(f.trx_source)` + entity | N:M | The subledger tie. Answers *"what is behind this batch"* |
+| [snap_ar_aging_daily](snap_ar_aging_daily.md) | `s.ar_transaction_key = f.ar_transaction_key` | 1:N | One row per snapshot date |
+| [mart_ar_aging](mart_ar_aging.md) | `(legal_entity_code, gp_customer_number)` | N:M | Aggregate — customer grain, not document grain |
 
 ### Seven date columns, one `date_key`
 

@@ -10,7 +10,7 @@ updated: 2026-09-09
 # finance.general_ledger.fact_gl_posting
 
 > [!warning] Not built
-> DDL: [[../ddl/06-finance-general-ledger.sql|06-finance-general-ledger.sql]] · `STATUS: NOT EXECUTED`. See [[Table Specifications]].
+> DDL: [06-finance-general-ledger.sql](../ddl/06-finance-general-ledger.sql) · `STATUS: NOT EXECUTED`. See [Table Specifications](Table%20Specifications.md).
 
 | | |
 |---|---|
@@ -40,25 +40,25 @@ The flags derive from `SOURCDOC`. The GP convention is `'BBF'` and `'P/L'`, **bu
 |---|---|---|---|---|
 | `gl_posting_key` | BIGINT | No | Derived | PK. `xxhash64(legal_entity_code, fiscal_year, journal_entry_number, receipt_trx_sequence, sequence_number)`. Deterministic rather than identity: a full reload must not renumber and orphan downstream references, and Delta identity columns cannot be populated by CTAS |
 | `legal_entity_code` | STRING | No | Derived | Both companies are unioned in. GP identifiers are company-scoped, so this belongs in every natural key |
-| `legal_entity_key` | BIGINT | Yes | Derived | FK to [[dim_legal_entity]] |
+| `legal_entity_key` | BIGINT | Yes | Derived | FK to [dim_legal_entity](dim_legal_entity.md) |
 | `fiscal_year` | INT | No | `OPENYEAR` / `HSTYEAR` | **The single column that reconciles the two source tables** |
 | `fiscal_period` | INT | Yes | `PERIODID` | **Period 0 carries beginning-balance-forward and is not a data error** |
-| `fiscal_period_key` | BIGINT | Yes | Derived | FK to [[dim_fiscal_calendar]] at `period_level = 'period'`. **Deliberately separate from `date_key`** — the period an amount is recognized in is not always the period its transaction date falls in, and collapsing the two makes a restated amount impossible to explain |
+| `fiscal_period_key` | BIGINT | Yes | Derived | FK to [dim_fiscal_calendar](dim_fiscal_calendar.md) at `period_level = 'period'`. **Deliberately separate from `date_key`** — the period an amount is recognized in is not always the period its transaction date falls in, and collapsing the two makes a restated amount impossible to explain |
 | `journal_entry_number` | BIGINT | No | `JRNENTRY` | **Unique within a company and year, not across them** |
 | `receipt_trx_sequence` | BIGINT | Yes | `RCTRXSEQ` | |
 | `sequence_number` | BIGINT | No | `SEQNUMBR` | The distribution line within the entry. **This is what makes the grain a line rather than an entry** |
-| `account_key` | BIGINT | Yes | Derived | FK to [[dim_gl_account]] |
+| `account_key` | BIGINT | Yes | Derived | FK to [dim_gl_account](dim_gl_account.md) |
 | `account_index` | INT | Yes | `ACTINDX` | As replicated |
 | `transaction_date` | DATE | Yes | `TRXDATE` | Blank-date sentinel → NULL |
 | `document_date` | DATE | Yes | `DOCDATE` | |
 | `originating_post_date` | DATE | Yes | `ORPSTDDT` | |
-| `date_key` | INT | Yes | Derived on `transaction_date` | FK to [[dim_date]]. Declared INT on a `yyyymmdd` assumption — **T-01** |
+| `date_key` | INT | Yes | Derived on `transaction_date` | FK to [dim_date](dim_date.md). Declared INT on a `yyyymmdd` assumption — **T-01** |
 | `debit_amount` | DECIMAL(19,5) | Yes | `DEBITAMT` | Functional currency |
 | `credit_amount` | DECIMAL(19,5) | Yes | `CRDTAMNT` | Functional currency |
 | `net_amount` | DECIMAL(19,5) | Yes | Derived | `debit_amount − credit_amount`. Present so **no consumer has to choose a sign convention, and every consumer chooses the same one** |
 | `originating_debit_amount` | DECIMAL(19,5) | Yes | `ORDBTAMT` | Originating (transaction) currency |
 | `originating_credit_amount` | DECIMAL(19,5) | Yes | `ORCRDAMT` | Originating currency |
-| `currency_key` | BIGINT | Yes | Derived | FK to [[dim_currency]] |
+| `currency_key` | BIGINT | Yes | Derived | FK to [dim_currency](dim_currency.md) |
 | `gp_currency_id` | STRING | Yes | `CURNCYID` | |
 | `gp_currency_index` | INT | Yes | `CURRNIDX` | |
 | `exchange_rate` | DECIMAL(19,7) | Yes | `XCHGRATE` | |
@@ -66,7 +66,7 @@ The flags derive from `SOURCDOC`. The GP convention is `'BBF'` and `'P/L'`, **bu
 | `exchange_rate_date` | DATE | Yes | `EXCHDATE` | |
 | `rate_calculation_method` | INT | Yes | `RTCLCMTD` | Multiply or divide. **Applying the wrong direction inverts every translated amount**, so it must be read rather than assumed |
 | `rate_type_id` | STRING | Yes | `RATETPID` | |
-| `exchange_table_id` | STRING | Yes | `EXGTBLID` | Joins to [[fact_exchange_rate]] for rate provenance |
+| `exchange_table_id` | STRING | Yes | `EXGTBLID` | Joins to [fact_exchange_rate](fact_exchange_rate.md) for rate provenance |
 | `multicurrency_state` | INT | Yes | `MCTRXSTT` | |
 | `source_document` | STRING | Yes | `SOURCDOC` | **The column the BBF and P/L flags are derived from** |
 | `reference_text` | STRING | Yes | `REFRENCE` | |
@@ -81,7 +81,7 @@ The flags derive from `SOURCDOC`. The GP convention is `'BBF'` and `'P/L'`, **bu
 | `originating_source` | STRING | Yes | `ORGNTSRC` | |
 | `ledger_id` | INT | Yes | `Ledger_ID` | |
 | `posting_number` | INT | Yes | `PSTGNMBR` | |
-| `posted_by_user_id` | STRING | Yes | `USWHPSTD` | Joins to [[dim_gp_user]] |
+| `posted_by_user_id` | STRING | Yes | `USWHPSTD` | Joins to [dim_gp_user](dim_gp_user.md) |
 | `last_modified_by_user_id` | STRING | Yes | `LASTUSER` | |
 | `approval_user_id` | STRING | Yes | `APRVLUSERID` | |
 | `approval_date` | DATE | Yes | `APPRVLDT` | |
@@ -112,17 +112,17 @@ The flags derive from `SOURCDOC`. The GP convention is `'BBF'` and `'P/L'`, **bu
 
 | Join to | On | Cardinality | Notes |
 |---|---|---|---|
-| [[dim_gl_account]] | `f.account_key = a.account_key` | N:1 | Declared FK |
-| [[dim_legal_entity]] | `f.legal_entity_key = le.legal_entity_key` | N:1 | Declared FK |
-| [[dim_currency]] | `f.currency_key = c.currency_key` | N:1 | Declared FK |
-| [[dim_fiscal_calendar]] | `f.fiscal_period_key = dfc.fiscal_period_key` | N:1 | Declared FK. **Filter `period_level = 'period'`** |
-| [[dim_date]] | `f.date_key = d.date_key` | N:1 | On `transaction_date` |
-| [[dim_gp_user]] | `trim(u.gp_user_id) = trim(f.posted_by_user_id)` | N:1 | **`LEFT JOIN`, aliased per role.** Three user columns |
-| [[fact_exchange_rate]] | as-of, on `(legal_entity_code, exchange_table_id, gp_currency_id)` + `rate_date <= transaction_date` | N:1 | **Not an equijoin** — see [[fact_exchange_rate]] |
-| [[snap_period_close_daily]] | `(legal_entity_code, fiscal_year, fiscal_period)` **+ `series_id`** | N:1 | **Omitting `series_id` fans out sevenfold** |
-| [[fact_ar_transaction]] | `trim(f.trx_source) = trim(ar.trx_source)` | N:M | The subledger tie. See below |
-| [[dim_customer]] | via `originating_master_id` | N:1 | Only for receivables postings. See below |
-| [[mart_account_period_activity]] | This fact is its source | — | Aggregate, not join |
+| [dim_gl_account](dim_gl_account.md) | `f.account_key = a.account_key` | N:1 | Declared FK |
+| [dim_legal_entity](dim_legal_entity.md) | `f.legal_entity_key = le.legal_entity_key` | N:1 | Declared FK |
+| [dim_currency](dim_currency.md) | `f.currency_key = c.currency_key` | N:1 | Declared FK |
+| [dim_fiscal_calendar](dim_fiscal_calendar.md) | `f.fiscal_period_key = dfc.fiscal_period_key` | N:1 | Declared FK. **Filter `period_level = 'period'`** |
+| [dim_date](dim_date.md) | `f.date_key = d.date_key` | N:1 | On `transaction_date` |
+| [dim_gp_user](dim_gp_user.md) | `trim(u.gp_user_id) = trim(f.posted_by_user_id)` | N:1 | **`LEFT JOIN`, aliased per role.** Three user columns |
+| [fact_exchange_rate](fact_exchange_rate.md) | as-of, on `(legal_entity_code, exchange_table_id, gp_currency_id)` + `rate_date <= transaction_date` | N:1 | **Not an equijoin** — see [fact_exchange_rate](fact_exchange_rate.md) |
+| [snap_period_close_daily](snap_period_close_daily.md) | `(legal_entity_code, fiscal_year, fiscal_period)` **+ `series_id`** | N:1 | **Omitting `series_id` fans out sevenfold** |
+| [fact_ar_transaction](fact_ar_transaction.md) | `trim(f.trx_source) = trim(ar.trx_source)` | N:M | The subledger tie. See below |
+| [dim_customer](dim_customer.md) | via `originating_master_id` | N:1 | Only for receivables postings. See below |
+| [mart_account_period_activity](mart_account_period_activity.md) | This fact is its source | — | Aggregate, not join |
 
 ### The subledger tie: `trx_source`
 

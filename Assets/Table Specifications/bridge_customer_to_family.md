@@ -11,7 +11,7 @@ updated: 2026-09-09
 # finance.identity.bridge_customer_to_family
 
 > [!warning] Not built, and mostly unprofiled
-> DDL: [[../ddl/05-finance-identity.sql|05-finance-identity.sql]] · `STATUS: NOT EXECUTED`. Its source, `main.prod_fin_ipr_ipr.ipr`, is **not in the GP metadata reference**. Only the columns named in the spine validation are confirmed; the rest are marked **PROFILE** — placeholders to be replaced by a `DESCRIBE`, not assertions. Blocked on **T-10** and **T-11**.
+> DDL: [05-finance-identity.sql](../ddl/05-finance-identity.sql) · `STATUS: NOT EXECUTED`. Its source, `main.prod_fin_ipr_ipr.ipr`, is **not in the GP metadata reference**. Only the columns named in the spine validation are confirmed; the rest are marked **PROFILE** — placeholders to be replaced by a `DESCRIBE`, not assertions. Blocked on **T-10** and **T-11**.
 
 | | |
 |---|---|
@@ -43,7 +43,7 @@ Documented up front rather than discovered in month three:
 
 | Column | Type | Null | Source | Notes |
 |---|---|---|---|---|
-| `customer_key` | BIGINT | Yes | Derived | FK to [[dim_customer]]. **NULL is meaningful and must not be filtered away** — it means the charge has not been invoiced yet, which is the unbilled-move-in population |
+| `customer_key` | BIGINT | Yes | Derived | FK to [dim_customer](dim_customer.md). **NULL is meaningful and must not be filtered away** — it means the charge has not been invoiced yet, which is the unbilled-move-in population |
 | `gp_customer_number` | STRING | Yes | `ipr.fin_customer_id` | The GP spine key. 97.92% row coverage, 97.24% distinct coverage |
 | `lead_id` | STRING | Yes | `ipr.lead_id` | **PROFILE** — confirm the landed type. Declared STRING to avoid asserting an integer that may be a code |
 | `family_file_id` | STRING | Yes | Reached from `lead_id` | The funnel family key. Resolves at 100.00% for FY2023–2026. **PROFILE** |
@@ -71,7 +71,7 @@ Documented up front rather than discovered in month three:
 
 | Join to | On | Cardinality | Notes |
 |---|---|---|---|
-| [[dim_customer]] | `b.customer_key = dc.customer_key` | N:1 | Declared FK |
+| [dim_customer](dim_customer.md) | `b.customer_key = dc.customer_key` | N:1 | Declared FK |
 | Funnel family dimension | `b.family_file_id = …` | N:1 | Outside this catalog. **PROFILE** the key first |
 | Any AR fact | via `customer_key` | **N:M** | See the fan-out warning |
 

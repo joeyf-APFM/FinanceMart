@@ -10,7 +10,7 @@ updated: 2026-09-09
 # finance.reference.dim_legal_entity
 
 > [!warning] Not built
-> DDL: [[../ddl/04-finance-reference.sql|04-finance-reference.sql]] · `STATUS: NOT EXECUTED`. See [[Table Specifications]].
+> DDL: [04-finance-reference.sql](../ddl/04-finance-reference.sql) · `STATUS: NOT EXECUTED`. See [Table Specifications](Table%20Specifications.md).
 
 | | |
 |---|---|
@@ -41,7 +41,7 @@ Which is why `legal_entity_code` is stamped on **every row of every fact in this
 | `country_code` | STRING | Yes | `SY01500.CMPCNTRY` | **CAPFM being Canadian is what makes multicurrency load-bearing rather than optional** |
 | `location_id` | STRING | Yes | `SY01500.LOCATNID` | |
 | `account_segment_separator` | STRING | Yes | `SY01500.ACSEGSEP` | Needed to render a formatted account number. **Do not hardcode a hyphen** |
-| `functional_currency_key` | BIGINT | Yes | Derived | FK to [[dim_currency]]. The **denominator for every unconverted amount** in that entity's facts |
+| `functional_currency_key` | BIGINT | Yes | Derived | FK to [dim_currency](dim_currency.md). The **denominator for every unconverted amount** in that entity's facts |
 | `gp_created_date` | DATE | Yes | `SY01500.CREATDDT` | |
 | `gp_modified_date` | DATE | Yes | `SY01500.MODIFDT` | |
 | `is_reserved_member` | BOOLEAN | No | Derived | |
@@ -59,12 +59,12 @@ Almost everything in the catalog carries `legal_entity_code`, and most also carr
 
 | Join to | On | Cardinality | Notes |
 |---|---|---|---|
-| [[dim_currency]] | `le.functional_currency_key = c.currency_key` | N:1 | |
-| [[dim_customer]] | `dc.legal_entity_key = le.legal_entity_key` | 1:N | Declared FK |
-| [[fact_gl_posting]], [[fact_gl_posting_work]] | `f.legal_entity_key = le.legal_entity_key` | 1:N | Declared FK on the posted fact |
-| [[fact_ar_transaction]], [[fact_ar_apply]] | `f.legal_entity_key = le.legal_entity_key` | 1:N | |
-| [[dim_gl_account]] | `da.legal_entity_key = le.legal_entity_key` | 1:N | |
-| Everything else | `x.legal_entity_code = le.legal_entity_code` | N:1 | The string code is present even where the surrogate is not — e.g. [[snap_period_close_daily]], [[mart_ar_aging]], [[fact_plan_amount]] |
+| [dim_currency](dim_currency.md) | `le.functional_currency_key = c.currency_key` | N:1 | |
+| [dim_customer](dim_customer.md) | `dc.legal_entity_key = le.legal_entity_key` | 1:N | Declared FK |
+| [fact_gl_posting](fact_gl_posting.md), [fact_gl_posting_work](fact_gl_posting_work.md) | `f.legal_entity_key = le.legal_entity_key` | 1:N | Declared FK on the posted fact |
+| [fact_ar_transaction](fact_ar_transaction.md), [fact_ar_apply](fact_ar_apply.md) | `f.legal_entity_key = le.legal_entity_key` | 1:N | |
+| [dim_gl_account](dim_gl_account.md) | `da.legal_entity_key = le.legal_entity_key` | 1:N | |
+| Everything else | `x.legal_entity_code = le.legal_entity_code` | N:1 | The string code is present even where the surrogate is not — e.g. [snap_period_close_daily](snap_period_close_daily.md), [mart_ar_aging](mart_ar_aging.md), [fact_plan_amount](fact_plan_amount.md) |
 
 ### `legal_entity_code` is part of the natural key of nearly everything
 
@@ -89,7 +89,7 @@ The surrogate keys already encode this — `customer_key` is `xxhash64(legal_ent
 concat_ws(le.account_segment_separator, a.segment_1, a.segment_2, a.segment_3, ...)
 ```
 
-[[dim_gl_account]] carries `formatted_account_number` already assembled; this column exists for anything building its own.
+[dim_gl_account](dim_gl_account.md) carries `formatted_account_number` already assembled; this column exists for anything building its own.
 
 ## Gotchas
 

@@ -14,7 +14,7 @@ updated: 2026-09-09
 > `mir.customer_billing_id` matches a GP customer on **22.19% of rows.** Using it as the spine means silently losing roughly four rows in five. The tag `never_use_as_spine = 'true'` is on the object for this reason.
 
 > [!warning] Not built, and mostly unprofiled
-> DDL: [[../ddl/05-finance-identity.sql|05-finance-identity.sql]] · `STATUS: NOT EXECUTED`. `main.prod_fin_01_cst.mir` is **not in the GP metadata reference**; columns marked **PROFILE** are placeholders. See [[Table Specifications]].
+> DDL: [05-finance-identity.sql](../ddl/05-finance-identity.sql) · `STATUS: NOT EXECUTED`. `main.prod_fin_01_cst.mir` is **not in the GP metadata reference**; columns marked **PROFILE** are placeholders. See [Table Specifications](Table%20Specifications.md).
 
 | | |
 |---|---|
@@ -29,13 +29,13 @@ updated: 2026-09-09
 
 The epic's Salesforce-to-GP reconciliation use case is **served by exposing the mismatch, not by hiding it.** The unmatched rows are the deliverable, not the error. That is why `match_status` is a first-class column rather than a load-time filter — a 22.19% match rate means **the unmatched rows are the normal case** and must be visible rather than lost to an inner join.
 
-Contrast with [[bridge_customer_to_family]], which resolves at 99.28% on the same kind of join and is therefore usable as a traversal. This one is usable only as a reconciliation subject.
+Contrast with [bridge_customer_to_family](bridge_customer_to_family.md), which resolves at 99.28% on the same kind of join and is therefore usable as a traversal. This one is usable only as a reconciliation subject.
 
 ## Columns
 
 | Column | Type | Null | Source | Notes |
 |---|---|---|---|---|
-| `customer_key` | BIGINT | Yes | Derived | FK to [[dim_customer]]. **Null where the Salesforce record carries a billing id GP does not recognise, which is most of them** |
+| `customer_key` | BIGINT | Yes | Derived | FK to [dim_customer](dim_customer.md). **Null where the Salesforce record carries a billing id GP does not recognise, which is most of them** |
 | `gp_customer_number` | STRING | Yes | `mir.customer_billing_id`, trimmed | Matches a GP customer on only 22.19% of rows |
 | `salesforce_id` | STRING | Yes | `mir.salesforce_id` | **PROFILE** — confirm which Salesforce object this identifies before a consumer assumes `Account` |
 | `match_status` | STRING | No | Derived | `matched`, `unmatched_in_gp`, or `ambiguous` |
@@ -59,7 +59,7 @@ Contrast with [[bridge_customer_to_family]], which resolves at 99.28% on the sam
 
 | Join to | On | Cardinality | Notes |
 |---|---|---|---|
-| [[dim_customer]] | `b.customer_key = dc.customer_key` | N:1 | Declared FK |
+| [dim_customer](dim_customer.md) | `b.customer_key = dc.customer_key` | N:1 | Declared FK |
 | Salesforce Account/Opportunity | `b.salesforce_id = …` | N:1 | Outside this catalog. **PROFILE which object first** |
 | Any AR fact | via `customer_key` | **N:M** | Fan-out, and only 22% resolvable |
 
@@ -98,6 +98,6 @@ An `ambiguous` row is one billing id resolving to more than one Salesforce id, o
 
 ## Gotchas
 
-- **Never join `mir` to GP to establish identity.** Use [[bridge_customer_to_family]] or [[dim_customer]] directly for that.
+- **Never join `mir` to GP to establish identity.** Use [bridge_customer_to_family](bridge_customer_to_family.md) or [dim_customer](dim_customer.md) directly for that.
 - **`salesforce_id`'s object is unconfirmed.** If it is a Contact or a Lead rather than an Account, every downstream join changes.
 - **22.19% is measured on today's data.** Re-measure rather than assuming the rate improves or degrades; the tag value should be updated when it does.

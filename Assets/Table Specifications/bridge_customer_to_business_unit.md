@@ -11,7 +11,7 @@ updated: 2026-09-09
 # finance.identity.bridge_customer_to_business_unit
 
 > [!warning] Not built, and partly unprofiled
-> DDL: [[../ddl/05-finance-identity.sql|05-finance-identity.sql]] · `STATUS: NOT EXECUTED`. `main.prod_ygl_apfm.great_plains_customer_mapping` is **not in the GP metadata reference**; columns marked **PROFILE** are placeholders. See [[Table Specifications]].
+> DDL: [05-finance-identity.sql](../ddl/05-finance-identity.sql) · `STATUS: NOT EXECUTED`. `main.prod_ygl_apfm.great_plains_customer_mapping` is **not in the GP metadata reference**; columns marked **PROFILE** are placeholders. See [Table Specifications](Table%20Specifications.md).
 
 | | |
 |---|---|
@@ -23,15 +23,15 @@ updated: 2026-09-09
 
 ## Why this table settles the grain argument
 
-The YGL mapping resolves a GP customer at `business_unit_id` grain — **a community.** This is the table that proves [[dim_customer]] is a billing account rather than a partner: **one GP customer can bill for several communities, and a community can change which customer bills it.** Both halves of that sentence are why the bridge is many-to-many *and* effective-dated.
+The YGL mapping resolves a GP customer at `business_unit_id` grain — **a community.** This is the table that proves [dim_customer](dim_customer.md) is a billing account rather than a partner: **one GP customer can bill for several communities, and a community can change which customer bills it.** Both halves of that sentence are why the bridge is many-to-many *and* effective-dated.
 
-It is also the only path from a finance figure to a community, which makes it the dependency behind `business_unit_id` on [[mart_writeoff]] and [[mart_billing_by_stream]], and behind the row-filter proposal for the CAM audience in [[../Collections in the Finance Catalog|Collections in the Finance Catalog]].
+It is also the only path from a finance figure to a community, which makes it the dependency behind `business_unit_id` on [mart_writeoff](mart_writeoff.md) and [mart_billing_by_stream](mart_billing_by_stream.md), and behind the row-filter proposal for the CAM audience in [Collections in the Finance Catalog](../Collections%20in%20the%20Finance%20Catalog.md).
 
 ## Columns
 
 | Column | Type | Null | Source | Notes |
 |---|---|---|---|---|
-| `customer_key` | BIGINT | Yes | Derived | FK to [[dim_customer]] |
+| `customer_key` | BIGINT | Yes | Derived | FK to [dim_customer](dim_customer.md) |
 | `gp_customer_number` | STRING | Yes | mapping, trimmed | |
 | `business_unit_id` | STRING | Yes | mapping | A community. **PROFILE** — confirm the landed type and whether it is unique across YGL tenants |
 | `valid_from` | DATE | Yes | `begin_date` | **The mapping is effective-dated, which is why this bridge is not a simple lookup** |
@@ -56,9 +56,9 @@ It is also the only path from a finance figure to a community, which makes it th
 
 | Join to | On | Cardinality | Notes |
 |---|---|---|---|
-| [[dim_customer]] | `b.customer_key = dc.customer_key` | N:1 | Declared FK |
+| [dim_customer](dim_customer.md) | `b.customer_key = dc.customer_key` | N:1 | Declared FK |
 | Community / business-unit dimension | `b.business_unit_id = …` | N:1 | Outside this catalog |
-| [[mart_writeoff]] | `business_unit_id` already resolved on the mart | — | **Do not re-derive it.** The mart resolves it as of `writeoff_date`; re-joining as-of today gives a different answer |
+| [mart_writeoff](mart_writeoff.md) | `business_unit_id` already resolved on the mart | — | **Do not re-derive it.** The mart resolves it as of `writeoff_date`; re-joining as-of today gives a different answer |
 | Any AR or billing fact | as-of predicate on the fact's own date | **N:M** | See below |
 
 ### This is an as-of join

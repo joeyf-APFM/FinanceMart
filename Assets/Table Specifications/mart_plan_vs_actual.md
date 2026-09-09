@@ -10,18 +10,18 @@ updated: 2026-09-09
 # finance.plan.mart_plan_vs_actual
 
 > [!danger] `includes_bbf` and `includes_pl_close` are in the primary key — pin both
-> They are **inherited from [[mart_account_period_activity]]**, whose grain carries them. Every account and period therefore appears **up to four times**, and an unpinned query returns a variance two to four times too large with a correct-looking sign, a correct-looking account list and a correct-looking period.
+> They are **inherited from [mart_account_period_activity](mart_account_period_activity.md)**, whose grain carries them. Every account and period therefore appears **up to four times**, and an unpinned query returns a variance two to four times too large with a correct-looking sign, a correct-looking account list and a correct-looking period.
 >
 > *"A variance computed against an actual that includes beginning-balance-forward entries is wrong in a way that looks plausible"* — which is why the flags were carried through rather than collapsed.
 
 > [!warning] Not built
-> DDL: [[../ddl/09-finance-plan.sql|09-finance-plan.sql]] · `STATUS: NOT EXECUTED`. See [[Table Specifications]].
+> DDL: [09-finance-plan.sql](../ddl/09-finance-plan.sql) · `STATUS: NOT EXECUTED`. See [Table Specifications](Table%20Specifications.md).
 
 | | |
 |---|---|
 | **Type** | Mart (aggregate) |
 | **Grain** | Legal entity × budget × fiscal year × period × account × `includes_bbf` × `includes_pl_close` |
-| **Sources** | [[fact_plan_amount]], [[fact_plan_adjustment]] (posted), and **[[mart_account_period_activity]]** for actual |
+| **Sources** | [fact_plan_amount](fact_plan_amount.md), [fact_plan_adjustment](fact_plan_adjustment.md) (posted), and **[mart_account_period_activity](mart_account_period_activity.md)** for actual |
 | **Join type** | **`FULL OUTER`** — tagged as such |
 | **Clustering** | `CLUSTER BY (legal_entity_code, fiscal_year, budget_id)` |
 | **Readers** | `finance-analysts` |
@@ -29,9 +29,9 @@ updated: 2026-09-09
 
 ## Actual comes from the mart, not from the fact
 
-*"Actual comes from `finance.general_ledger.mart_account_period_activity`, **NOT** from [[fact_gl_posting]] directly, so that plan-versus-actual and any activity report agree by construction rather than by coincidence."*
+*"Actual comes from `finance.general_ledger.mart_account_period_activity`, **NOT** from [fact_gl_posting](fact_gl_posting.md) directly, so that plan-versus-actual and any activity report agree by construction rather than by coincidence."*
 
-The consequence is a real dependency, not just a preference: **a change to how [[mart_account_period_activity]] aggregates changes this mart's `actual_amount`.** Anyone editing that mart's flag derivation is editing every variance in this one.
+The consequence is a real dependency, not just a preference: **a change to how [mart_account_period_activity](mart_account_period_activity.md) aggregates changes this mart's `actual_amount`.** Anyone editing that mart's flag derivation is editing every variance in this one.
 
 ## Commitments are the first question anyone will ask
 
@@ -48,17 +48,17 @@ So `committed_amount` is a real column that is **always NULL, with the reason on
 | Column | Type | Null | Source | Notes |
 |---|---|---|---|---|
 | `legal_entity_code` | STRING | No | Derived | **PK.** APFM or CAPFM |
-| `budget_id` | STRING | No | [[fact_plan_amount]] | **PK.** *"Comparing one period's actuals to two budgets is two answers and both are legitimate"* |
+| `budget_id` | STRING | No | [fact_plan_amount](fact_plan_amount.md) | **PK.** *"Comparing one period's actuals to two budgets is two answers and both are legitimate"* |
 | `fiscal_year` | INT | No | Derived | **PK** |
 | `period_number` | INT | No | Derived | **PK** |
-| `fiscal_period_key` | BIGINT | Yes | Derived | FK to [[dim_fiscal_calendar]]. **Not in the PK** |
-| `gl_account_key` | BIGINT | No | Derived | **PK.** FK to [[dim_gl_account]] |
+| `fiscal_period_key` | BIGINT | Yes | Derived | FK to [dim_fiscal_calendar](dim_fiscal_calendar.md). **Not in the PK** |
+| `gl_account_key` | BIGINT | No | Derived | **PK.** FK to [dim_gl_account](dim_gl_account.md) |
 | `account_index` | INT | No | Denormalised | **GP's account index, carried so a consumer can trace a row back to source without a join** |
 | `includes_bbf` | BOOLEAN | No | Inherited | **PK.** Whether `actual_amount` includes beginning-balance-forward entries. **In the grain rather than a footnote** |
 | `includes_pl_close` | BOOLEAN | No | Inherited | **PK.** Whether `actual_amount` includes profit-and-loss close entries |
-| `plan_amount` | DECIMAL(19,5) | Yes | [[fact_plan_amount]] | **The plan as currently held in GP, which is the plan *after* posted adjustments** |
-| `plan_adjustment_amount` | DECIMAL(19,5) | Yes | [[fact_plan_adjustment]], posted | Sum of posted adjustments for the same key. **Carried separately so that "plan as originally set" and "plan as adjusted" are both answerable.** Not additive to `plan_amount` |
-| `actual_amount` | DECIMAL(19,5) | Yes | [[mart_account_period_activity]] | **Sourced from that mart rather than from `fact_gl_posting` so that this and any activity report agree by construction** |
+| `plan_amount` | DECIMAL(19,5) | Yes | [fact_plan_amount](fact_plan_amount.md) | **The plan as currently held in GP, which is the plan *after* posted adjustments** |
+| `plan_adjustment_amount` | DECIMAL(19,5) | Yes | [fact_plan_adjustment](fact_plan_adjustment.md), posted | Sum of posted adjustments for the same key. **Carried separately so that "plan as originally set" and "plan as adjusted" are both answerable.** Not additive to `plan_amount` |
+| `actual_amount` | DECIMAL(19,5) | Yes | [mart_account_period_activity](mart_account_period_activity.md) | **Sourced from that mart rather than from `fact_gl_posting` so that this and any activity report agree by construction** |
 | `committed_amount` | DECIMAL(19,5) | Yes | — | **ALWAYS NULL TODAY, and present on purpose.** See above |
 | `variance_amount` | DECIMAL(19,5) | Yes | Derived | `actual_amount − plan_amount`. **Sign convention fixed here: positive means actual exceeds plan, regardless of whether the account is income or expense. Do not flip the sign per account type in this table — do it in the presentation layer where the audience is known** |
 | `variance_pct` | DECIMAL(9,6) | Yes | Derived | `variance_amount / plan_amount`. **NULL where `plan_amount` is zero, rather than zero or infinity — a null percentage against a zero plan is the honest answer** |
@@ -81,14 +81,14 @@ So `committed_amount` is a real column that is **always NULL, with the reason on
 
 | Join to | On | Cardinality | Notes |
 |---|---|---|---|
-| [[dim_gl_account]] | `m.gl_account_key = a.account_key` | N:1 | Declared FK. **Where plan and actual meet** |
-| [[dim_fiscal_calendar]] | `m.fiscal_period_key = dfc.fiscal_period_key` | N:1 | Declared FK. Filter `period_level = 'period'` |
-| [[dim_legal_entity]] | `m.legal_entity_code = le.legal_entity_code` | N:1 | **No surrogate carried** |
-| [[fact_plan_amount]] | `(legal_entity_code, budget_id, fiscal_year, period_number, account_index)` | 1:N | Drill-down to the plan side |
-| [[fact_plan_adjustment]] | same natural key + `is_posted` | 1:N | Drill-down. **`is_posted` in the `ON` clause** |
-| [[mart_account_period_activity]] | `(legal_entity_code, fiscal_year, fiscal_period, account_key)` **+ both flags** | 1:N | Drill-down to actual. **The flags must match this row's flags** |
-| [[fact_gl_posting]] | Via the activity mart | — | **Do not go direct** — the two would then disagree |
-| [[mart_billing_by_stream]] | **Do not join** | — | Billing is `operational_not_recognized`; plan is compared to recognised actuals |
+| [dim_gl_account](dim_gl_account.md) | `m.gl_account_key = a.account_key` | N:1 | Declared FK. **Where plan and actual meet** |
+| [dim_fiscal_calendar](dim_fiscal_calendar.md) | `m.fiscal_period_key = dfc.fiscal_period_key` | N:1 | Declared FK. Filter `period_level = 'period'` |
+| [dim_legal_entity](dim_legal_entity.md) | `m.legal_entity_code = le.legal_entity_code` | N:1 | **No surrogate carried** |
+| [fact_plan_amount](fact_plan_amount.md) | `(legal_entity_code, budget_id, fiscal_year, period_number, account_index)` | 1:N | Drill-down to the plan side |
+| [fact_plan_adjustment](fact_plan_adjustment.md) | same natural key + `is_posted` | 1:N | Drill-down. **`is_posted` in the `ON` clause** |
+| [mart_account_period_activity](mart_account_period_activity.md) | `(legal_entity_code, fiscal_year, fiscal_period, account_key)` **+ both flags** | 1:N | Drill-down to actual. **The flags must match this row's flags** |
+| [fact_gl_posting](fact_gl_posting.md) | Via the activity mart | — | **Do not go direct** — the two would then disagree |
+| [mart_billing_by_stream](mart_billing_by_stream.md) | **Do not join** | — | Billing is `operational_not_recognized`; plan is compared to recognised actuals |
 
 ### Pin both flags. Always.
 
@@ -106,7 +106,7 @@ GROUP BY 1
 
 Which combination is right depends on the question — a P&L variance normally wants neither BBF nor close entries; a balance-sheet movement question may want BBF. **What is never right is leaving them unpinned**, because `plan_amount` is repeated identically across all four combinations while `actual_amount` varies, so the variance is inflated *and* the plan is double counted.
 
-This is the same trap as on [[mart_account_period_activity]], and it arrives here by inheritance rather than by choice.
+This is the same trap as on [mart_account_period_activity](mart_account_period_activity.md), and it arrives here by inheritance rather than by choice.
 
 ### Do not filter `has_plan` or `has_actual` to true
 
@@ -155,7 +155,7 @@ Doing this inside the mart would make the stored column mean two different thing
 
 ### `plan_amount` and `plan_adjustment_amount` are not additive
 
-`plan_amount` is already the plan *after* posted adjustments — the same relationship as on [[fact_plan_adjustment]]. To get the original plan, **subtract**:
+`plan_amount` is already the plan *after* posted adjustments — the same relationship as on [fact_plan_adjustment](fact_plan_adjustment.md). To get the original plan, **subtract**:
 
 ```sql
 plan_amount - coalesce(plan_adjustment_amount, 0)  AS plan_as_originally_set
@@ -165,7 +165,7 @@ plan_amount                                       AS plan_as_adjusted
 ## Gotchas
 
 - **`committed_amount` is always null.** Do not `coalesce` it to zero, and do not present "actual vs plan" as complete spend commitment. A period with large open POs looks under budget here and is not.
-- **This mart depends on another mart's aggregation rules.** [[mart_account_period_activity]]'s currency grain is *not* carried here, so confirm how the pipeline collapses currency before using this cross-entity — a CAPFM variance against a functional-currency plan needs translation, and there is no currency column to check it against.
+- **This mart depends on another mart's aggregation rules.** [mart_account_period_activity](mart_account_period_activity.md)'s currency grain is *not* carried here, so confirm how the pipeline collapses currency before using this cross-entity — a CAPFM variance against a functional-currency plan needs translation, and there is no currency column to check it against.
 - **`grain` tag and PK disagree in detail.** The tag says `entity_x_budget_x_period_x_account`; the PK adds the two flags. **The PK is the grain.**
 - **No `source_system` / `source_table`.** Provenance is the `actual_sourced_from` tag plus `_loaded_at`.
 - **T-06 gates the flags.** The BBF / P&L-close derivation depends on profiling distinct `SOURCDOC` values; until that runs, both flags are a design intent rather than a validated split — and the variance inherits that.

@@ -10,7 +10,7 @@ updated: 2026-09-09
 # finance.reference.dim_currency
 
 > [!warning] Not built
-> DDL: [[../ddl/04-finance-reference.sql|04-finance-reference.sql]] · `STATUS: NOT EXECUTED`. See [[Table Specifications]].
+> DDL: [04-finance-reference.sql](../ddl/04-finance-reference.sql) · `STATUS: NOT EXECUTED`. See [Table Specifications](Table%20Specifications.md).
 
 | | |
 |---|---|
@@ -67,13 +67,13 @@ This is the table's one real trap. It carries **three** identifiers for the same
 
 | Join to | On | Cardinality | Notes |
 |---|---|---|---|
-| [[fact_exchange_rate]] | `f.currency_key = c.currency_key` | 1:N | |
-| [[dim_legal_entity]] | `le.functional_currency_key = c.currency_key` | 1:N | The entity's **functional** currency — the denominator for every unconverted amount in that entity's facts |
-| [[dim_customer]] | `dc.currency_key = c.currency_key` | 1:N | From `RM00101.CURNCYID` |
-| [[fact_gl_posting]], [[fact_gl_posting_work]] | `f.currency_key = c.currency_key` | 1:N | |
-| [[fact_ar_transaction]], [[fact_ar_apply]] | `f.currency_key = c.currency_key` | 1:N | |
-| [[fact_invoice_line]] | `f.currency_key = c.currency_key` | 1:N | Source carries `CURRNIDX`; resolve through `gp_currency_index` at load |
-| [[mart_account_period_activity]], [[mart_ar_aging]] | `m.currency_key = c.currency_key` | 1:N | `currency_key` is **in the primary key** of both marts |
+| [fact_exchange_rate](fact_exchange_rate.md) | `f.currency_key = c.currency_key` | 1:N | |
+| [dim_legal_entity](dim_legal_entity.md) | `le.functional_currency_key = c.currency_key` | 1:N | The entity's **functional** currency — the denominator for every unconverted amount in that entity's facts |
+| [dim_customer](dim_customer.md) | `dc.currency_key = c.currency_key` | 1:N | From `RM00101.CURNCYID` |
+| [fact_gl_posting](fact_gl_posting.md), [fact_gl_posting_work](fact_gl_posting_work.md) | `f.currency_key = c.currency_key` | 1:N | |
+| [fact_ar_transaction](fact_ar_transaction.md), [fact_ar_apply](fact_ar_apply.md) | `f.currency_key = c.currency_key` | 1:N | |
+| [fact_invoice_line](fact_invoice_line.md) | `f.currency_key = c.currency_key` | 1:N | Source carries `CURRNIDX`; resolve through `gp_currency_index` at load |
+| [mart_account_period_activity](mart_account_period_activity.md), [mart_ar_aging](mart_ar_aging.md) | `m.currency_key = c.currency_key` | 1:N | `currency_key` is **in the primary key** of both marts |
 
 ### Reserved members change how you filter
 
