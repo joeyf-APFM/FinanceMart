@@ -10,7 +10,9 @@ updated: 2026-09-09
 
 # Collections in the Finance Catalog
 
-> [!note] Placement analysis only — nothing was changed
+> [!NOTE]
+> **Placement analysis only — nothing was changed**
+>
 > This note answers *where collections belongs* in *Finance Catalog and Mart Design 2026-09-09* (vault: `plans/2026-09-09-finance-catalog-and-mart-design`, not in this repo). **No DDL file was edited, no table was added, and no grant was changed.** Everything proposed here is a proposal. The eleven files under `ddl/` still describe exactly what [Finance Catalog DDL](Finance%20Catalog%20DDL.md) says they describe.
 
 ## The answer

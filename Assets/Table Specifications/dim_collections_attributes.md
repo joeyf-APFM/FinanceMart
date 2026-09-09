@@ -9,7 +9,9 @@ updated: 2026-09-09
 
 # finance.receivables.dim_collections_attributes
 
-> [!warning] Not built
+> [!WARNING]
+> **Not built**
+>
 > DDL: [07-finance-receivables.sql](../ddl/07-finance-receivables.sql) · `STATUS: NOT EXECUTED`. See [Table Specifications](Table%20Specifications.md) and [Collections in the Finance Catalog](../Collections%20in%20the%20Finance%20Catalog.md).
 
 | | |

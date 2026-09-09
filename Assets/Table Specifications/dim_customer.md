@@ -10,10 +10,14 @@ updated: 2026-09-09
 
 # finance.identity.dim_customer
 
-> [!danger] PII-bearing, restricted schema
+> [!CAUTION]
+> **PII-bearing, restricted schema**
+>
 > Names, addresses, phone, fax, bank name and branch, tax registration number. `finance.identity` is granted to `finance-pii-readers` **only**. Masking is deferred to a later phase by decision — that decision is about today's audience and holds only as long as the audience does.
 
-> [!warning] Not built
+> [!WARNING]
+> **Not built**
+>
 > DDL: [05-finance-identity.sql](../ddl/05-finance-identity.sql) · `STATUS: NOT EXECUTED`. See [Table Specifications](Table%20Specifications.md).
 
 | | |

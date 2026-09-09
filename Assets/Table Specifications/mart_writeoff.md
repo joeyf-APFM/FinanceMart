@@ -9,10 +9,14 @@ updated: 2026-09-09
 
 # finance.receivables.mart_writeoff
 
-> [!tip] Servable today
+> [!TIP]
+> **Servable today**
+>
 > This directly serves the stated pain point — **write-offs and bad-debt recovery invisible to CAMs and Community Ops**. It **needs no ingestion that does not already exist.** It needs this table and a grant. `requires_no_new_ingestion = 'true'` is on the object.
 
-> [!warning] Not built
+> [!WARNING]
+> **Not built**
+>
 > DDL: [07-finance-receivables.sql](../ddl/07-finance-receivables.sql) · `STATUS: NOT EXECUTED`. See [Table Specifications](Table%20Specifications.md).
 
 | | |

@@ -9,10 +9,14 @@ updated: 2026-09-09
 
 # finance.receivables.snap_ar_aging_daily
 
-> [!tip] Start this early — but it is not the irrecoverable one
+> [!TIP]
+> **Start this early — but it is not the irrecoverable one**
+>
 > Unlike [snap_period_close_daily](snap_period_close_daily.md), a missed day here is **recoverable at cost** from [fact_ar_apply](fact_ar_apply.md). This snapshot exists for **cost**, not recoverability: the reconstruction is an expensive window over two unioned tables and depends on the apply trail being complete across the open/history boundary. Snapshot for routine reporting; reconstruct to validate the snapshot and to answer questions predating it.
 
-> [!warning] Not built
+> [!WARNING]
+> **Not built**
+>
 > DDL: [07-finance-receivables.sql](../ddl/07-finance-receivables.sql) · `STATUS: NOT EXECUTED`. See [Table Specifications](Table%20Specifications.md).
 
 | | |

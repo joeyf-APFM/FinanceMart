@@ -9,10 +9,14 @@ updated: 2026-09-09
 
 # finance.receivables.mart_ar_aging
 
-> [!danger] Publication is blocked
+> [!CAUTION]
+> **Publication is blocked**
+>
 > **Bucket cutoffs must be reconciled to GP's own aging setup before this is published.** The query research catalog flags it twice. Cutoffs that disagree with GP produce a report that is **defensibly wrong, which is worse than one that is obviously wrong** — it survives review and gets quoted. The check is [fact_ar_transaction](fact_ar_transaction.md)`.gp_aging_bucket`, and it exists **for open documents only**. Test **T-09**.
 
-> [!warning] Not built
+> [!WARNING]
+> **Not built**
+>
 > DDL: [07-finance-receivables.sql](../ddl/07-finance-receivables.sql) · `STATUS: NOT EXECUTED`. See [Table Specifications](Table%20Specifications.md).
 
 | | |

@@ -1,6 +1,8 @@
 # Finance Catalog DDL
 
-> [!danger] Nothing here has been created, and no workspace has been chosen
+> [!CAUTION]
+> **Nothing here has been created, and no workspace has been chosen**
+>
 > Every file carries a `STATUS: NOT EXECUTED` banner. No `databricks` command was run to produce this DDL — it is written from the GP metadata reference, the query research catalog, and the landscape evidence already in this vault.
 >
 > **The target workspace is still an open decision.** `attivita` for the stand-up, or straight into production. It matters more than it looks: `dbc-88a3d066-4cdb` is production *and* is the CLI default, so a single omitted `--profile` creates a `finance` catalog in production. Decide before the first statement runs.

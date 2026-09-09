@@ -9,12 +9,16 @@ updated: 2026-09-09
 
 # finance.plan.mart_plan_vs_actual
 
-> [!danger] `includes_bbf` and `includes_pl_close` are in the primary key — pin both
+> [!CAUTION]
+> **`includes_bbf` and `includes_pl_close` are in the primary key — pin both**
+>
 > They are **inherited from [mart_account_period_activity](mart_account_period_activity.md)**, whose grain carries them. Every account and period therefore appears **up to four times**, and an unpinned query returns a variance two to four times too large with a correct-looking sign, a correct-looking account list and a correct-looking period.
 >
 > *"A variance computed against an actual that includes beginning-balance-forward entries is wrong in a way that looks plausible"* — which is why the flags were carried through rather than collapsed.
 
-> [!warning] Not built
+> [!WARNING]
+> **Not built**
+>
 > DDL: [09-finance-plan.sql](../ddl/09-finance-plan.sql) · `STATUS: NOT EXECUTED`. See [Table Specifications](Table%20Specifications.md).
 
 | | |

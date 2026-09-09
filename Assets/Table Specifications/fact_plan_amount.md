@@ -9,10 +9,14 @@ updated: 2026-09-09
 
 # finance.plan.fact_plan_amount
 
-> [!info] The schema is called `plan`, the columns keep `BUDGET`
+> [!NOTE]
+> **The schema is called `plan`, the columns keep `BUDGET`**
+>
 > GP calls it a budget, the business plans against several things that are not budgets, and *"the schema will outlive whichever word is current"* — but **the GP column names keep BUDGET so the lineage back to source stays obvious.**
 
-> [!warning] Not built
+> [!WARNING]
+> **Not built**
+>
 > DDL: [09-finance-plan.sql](../ddl/09-finance-plan.sql) · `STATUS: NOT EXECUTED`. See [Table Specifications](Table%20Specifications.md).
 
 | | |

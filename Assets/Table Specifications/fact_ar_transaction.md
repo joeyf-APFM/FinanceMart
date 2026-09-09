@@ -9,7 +9,9 @@ updated: 2026-09-09
 
 # finance.receivables.fact_ar_transaction
 
-> [!warning] Not built
+> [!WARNING]
+> **Not built**
+>
 > DDL: [07-finance-receivables.sql](../ddl/07-finance-receivables.sql) · `STATUS: NOT EXECUTED`. See [Table Specifications](Table%20Specifications.md).
 
 | | |

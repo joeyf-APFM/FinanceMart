@@ -9,10 +9,14 @@ updated: 2026-09-09
 
 # finance.billing.fact_invoice_line
 
-> [!danger] The document header is not replicated
+> [!CAUTION]
+> **The document header is not replicated**
+>
 > **`SOP30200`, the sales document HEADER history table, is not in the replica.** Only `sop30300` (line history) is. The consequence is not cosmetic: **there is no reliable document-level customer, document date, void status, or salesperson for an invoice.** Each of those absences is labelled on the columns below rather than left for a consumer to discover when a total comes out wrong.
 
-> [!warning] Not built · APFM only
+> [!WARNING]
+> **Not built · APFM only**
+>
 > DDL: [08-finance-billing.sql](../ddl/08-finance-billing.sql) · `STATUS: NOT EXECUTED`. See [Table Specifications](Table%20Specifications.md).
 >
 > `sop30300` is **absent from `prod_gp_capfm_dbo`**, so this fact covers **one legal entity**. Stamped in the table comment and in a tag, because *"a consumer comparing invoiced amounts across entities will otherwise read CAPFM's absence as zero."*

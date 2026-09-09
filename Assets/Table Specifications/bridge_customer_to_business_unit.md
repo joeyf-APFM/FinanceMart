@@ -10,7 +10,9 @@ updated: 2026-09-09
 
 # finance.identity.bridge_customer_to_business_unit
 
-> [!warning] Not built, and partly unprofiled
+> [!WARNING]
+> **Not built, and partly unprofiled**
+>
 > DDL: [05-finance-identity.sql](../ddl/05-finance-identity.sql) · `STATUS: NOT EXECUTED`. `main.prod_ygl_apfm.great_plains_customer_mapping` is **not in the GP metadata reference**; columns marked **PROFILE** are placeholders. See [Table Specifications](Table%20Specifications.md).
 
 | | |

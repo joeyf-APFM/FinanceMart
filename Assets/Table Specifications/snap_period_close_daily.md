@@ -9,10 +9,14 @@ updated: 2026-09-09
 
 # common.calendar.snap_period_close_daily
 
-> [!danger] The one table with a deadline
+> [!CAUTION]
+> **The one table with a deadline**
+>
 > Every day without this snapshot is a day of history that **cannot be recovered**. `SY40100.CLOSED` is a current-state boolean and Fivetran overwrites it — GP records "is this period closed now" and never "was this period closed as of last Tuesday." Nine BO 2.0 vintage revenue measures need the second question. This should start collecting into a scratch schema **before the catalog exists and before Finance reviews anything**.
 
-> [!warning] Not built
+> [!WARNING]
+> **Not built**
+>
 > DDL: [03-common-calendar.sql](../ddl/03-common-calendar.sql) · `STATUS: NOT EXECUTED`. See [Table Specifications](Table%20Specifications.md).
 
 | | |

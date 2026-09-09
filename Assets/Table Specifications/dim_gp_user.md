@@ -9,7 +9,9 @@ updated: 2026-09-09
 
 # finance.reference.dim_gp_user
 
-> [!warning] Not built
+> [!WARNING]
+> **Not built**
+>
 > DDL: [04-finance-reference.sql](../ddl/04-finance-reference.sql) · `STATUS: NOT EXECUTED`. See [Table Specifications](Table%20Specifications.md).
 
 | | |

@@ -9,10 +9,14 @@ updated: 2026-09-09
 
 # finance.receivables.fact_ar_apply
 
-> [!info] This table is the AR history
+> [!NOTE]
+> **This table is the AR history**
+>
 > It is also what makes write-off reporting servable **today**: `WROFAMNT` with a date, no new ingestion required. The stated pain point — write-offs and bad-debt recovery invisible to CAMs and Community Ops — needs **this fact and a grant**.
 
-> [!warning] Not built
+> [!WARNING]
+> **Not built**
+>
 > DDL: [07-finance-receivables.sql](../ddl/07-finance-receivables.sql) · `STATUS: NOT EXECUTED`. See [Table Specifications](Table%20Specifications.md).
 
 | | |

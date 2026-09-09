@@ -9,10 +9,14 @@ updated: 2026-09-09
 
 # finance.general_ledger.mart_account_period_activity
 
-> [!danger] THIS IS NOT A TRIAL BALANCE
+> [!CAUTION]
+> **THIS IS NOT A TRIAL BALANCE**
+>
 > GP's account summary and beginning-balance tables are **not replicated**, so no opening balance exists to roll forward and no ending balance can be derived. This is **net period activity**. The design doc lists the slot as `mart_trial_balance` and instructs, in the same paragraph, to name it for what it is — because **a table called `mart_trial_balance` will be reconciled against a real trial balance and lose.** The rename implements the design rather than departing from it, and `design_slot = 'mart_trial_balance'` keeps the traceability.
 
-> [!warning] Not built
+> [!WARNING]
+> **Not built**
+>
 > DDL: [06-finance-general-ledger.sql](../ddl/06-finance-general-ledger.sql) · `STATUS: NOT EXECUTED`. See [Table Specifications](Table%20Specifications.md).
 
 | | |

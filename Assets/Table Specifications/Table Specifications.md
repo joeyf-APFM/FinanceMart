@@ -11,10 +11,14 @@ updated: 2026-09-09
 
 One note per table in the `finance` and `common` catalogs — columns, descriptions, table tags, and recommended joins. A level above [the DDL](../ddl/) and derived from it.
 
-> [!warning] Nothing here exists
+> [!WARNING]
+> **Nothing here exists**
+>
 > All 28 tables are specifications. Every file under `ddl/` carries a `STATUS: NOT EXECUTED` banner and **no target workspace has been chosen**. See [Finance Catalog DDL](../Finance%20Catalog%20DDL.md) for build order, conventions, and the fourteen verification tests.
 
-> [!info] The DDL is the artifact, these notes are the reading copy
+> [!NOTE]
+> **The DDL is the artifact, these notes are the reading copy**
+>
 > Where a note and its `.sql` file disagree, the `.sql` file is right and the note is stale. The notes add one thing the DDL does not carry: **recommended joins**, including the fan-out and as-of hazards that a declared foreign key does not express.
 
 ## The 28 tables

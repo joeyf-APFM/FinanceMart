@@ -9,10 +9,14 @@ updated: 2026-09-09
 
 # finance.billing.mart_billing_by_stream
 
-> [!danger] Do not reconcile this to the income statement
+> [!CAUTION]
+> **Do not reconcile this to the income statement**
+>
 > `do_not_reconcile_to = 'income_statement'` is on the object. **This is billing activity, not revenue.** Reconciling it to the income statement will not tie *"because the two measure different things at different times, not because either is wrong."* Recognised revenue is in [fact_gl_posting](fact_gl_posting.md).
 
-> [!warning] Not built · blocked on T-11
+> [!WARNING]
+> **Not built · blocked on T-11**
+>
 > DDL: [08-finance-billing.sql](../ddl/08-finance-billing.sql) · `STATUS: NOT EXECUTED`. See [Table Specifications](Table%20Specifications.md).
 >
 > **`billing_stream`'s domain must be enumerated from `ipr` before this mart is built** (T-11). *"An unenumerated stream column becomes an ever-growing pivot no one can validate."*

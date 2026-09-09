@@ -9,7 +9,9 @@ updated: 2026-09-09
 
 # common.calendar.dim_date
 
-> [!warning] Not built — and this one is a **promotion**, not a new build
+> [!WARNING]
+> **Not built — and this one is a *promotion*, not a new build**
+>
 > DDL: [03-common-calendar.sql](../ddl/03-common-calendar.sql), where every statement for this table is commented out. See [Table Specifications](Table%20Specifications.md).
 
 | | |

@@ -1,6 +1,8 @@
 # Finance Mart Design for APFM
 
-> [!warning] Superseded as a build plan — read as aspiration, not as scope
+> [!WARNING]
+> **Superseded as a build plan — read as aspiration, not as scope**
+>
 > This note predates the Dynamics GP evidence and models the finance mart around `dim_family`, `fact_marketing_spend`, and unit economics. The buildable subset against sources that are actually replicated is *Finance Catalog and Mart Design 2026-09-09* (vault: `plans/2026-09-09-finance-catalog-and-mart-design`, not in this repo), which lays out a `finance` catalog with marts as schemas and a `common` catalog for `dim_date` / `dim_fiscal_calendar`.
 >
 > Two differences worth knowing before using anything below. **`fact_marketing_spend`, `fact_sales_advisor_cost`, and the whole Unit Economics Mart are out of scope** — no spend source is replicated, and marketing cost is DTS-4188 / DTS-4180 territory. And **`dim_partner` here collides with GP's notion of a customer**: GP's "customer" is who APFM bills, resolving at `business_unit_id` grain — a community — so the design note treats `dim_customer` as the billing-account view of a partner that bridges to the conformed `dim_partner` rather than replacing it.

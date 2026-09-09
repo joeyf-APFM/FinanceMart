@@ -10,10 +10,14 @@ updated: 2026-09-09
 
 # finance.identity.bridge_customer_to_salesforce
 
-> [!danger] A bridge only — never the identity spine
+> [!CAUTION]
+> **A bridge only — never the identity spine**
+>
 > `mir.customer_billing_id` matches a GP customer on **22.19% of rows.** Using it as the spine means silently losing roughly four rows in five. The tag `never_use_as_spine = 'true'` is on the object for this reason.
 
-> [!warning] Not built, and mostly unprofiled
+> [!WARNING]
+> **Not built, and mostly unprofiled**
+>
 > DDL: [05-finance-identity.sql](../ddl/05-finance-identity.sql) · `STATUS: NOT EXECUTED`. `main.prod_fin_01_cst.mir` is **not in the GP metadata reference**; columns marked **PROFILE** are placeholders. See [Table Specifications](Table%20Specifications.md).
 
 | | |

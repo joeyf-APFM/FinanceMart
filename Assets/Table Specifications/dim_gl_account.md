@@ -9,7 +9,9 @@ updated: 2026-09-09
 
 # finance.general_ledger.dim_gl_account
 
-> [!warning] Not built
+> [!WARNING]
+> **Not built**
+>
 > DDL: [06-finance-general-ledger.sql](../ddl/06-finance-general-ledger.sql) · `STATUS: NOT EXECUTED`. See [Table Specifications](Table%20Specifications.md).
 
 | | |

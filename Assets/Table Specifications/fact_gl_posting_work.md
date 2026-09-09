@@ -9,7 +9,9 @@ updated: 2026-09-09
 
 # finance.general_ledger.fact_gl_posting_work
 
-> [!warning] Not built
+> [!WARNING]
+> **Not built**
+>
 > DDL: [06-finance-general-ledger.sql](../ddl/06-finance-general-ledger.sql) · `STATUS: NOT EXECUTED`. See [Table Specifications](Table%20Specifications.md).
 
 | | |
@@ -25,7 +27,9 @@ updated: 2026-09-09
 
 *"What is sitting unposted at period end"* — a **close-readiness question rather than a reporting one.**
 
-> [!danger] Never sum this with [fact_gl_posting](fact_gl_posting.md)
+> [!CAUTION]
+> **Never sum this with [fact_gl_posting](fact_gl_posting.md)**
+>
 > Unposted amounts are **not recognized** and must never be added to the posted fact in a single measure. The `measure_class = 'not_recognized'` tag exists to make that visible on the object.
 
 ## `work_source` is load-bearing, not cosmetic

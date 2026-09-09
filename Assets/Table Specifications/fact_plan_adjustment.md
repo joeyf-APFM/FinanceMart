@@ -9,12 +9,16 @@ updated: 2026-09-09
 
 # finance.plan.fact_plan_adjustment
 
-> [!danger] GP's own typo is reproduced verbatim — `BudgerAdjustment`
+> [!CAUTION]
+> **GP's own typo is reproduced verbatim — `BudgerAdjustment`**
+>
 > The source column is **`BudgerAdjustment`** in both `GL32000` and `GL12001`. **Not `BudgetAdjustment`.** It is spelled that way in the DDL comments on purpose: *"a load script written from a corrected spelling will fail, and the failure will look like a missing column rather than a typo."*
 >
 > `REFRENCE` is misspelled in GP too, and is likewise left alone.
 
-> [!warning] Not built
+> [!WARNING]
+> **Not built**
+>
 > DDL: [09-finance-plan.sql](../ddl/09-finance-plan.sql) · `STATUS: NOT EXECUTED`. See [Table Specifications](Table%20Specifications.md).
 
 | | |

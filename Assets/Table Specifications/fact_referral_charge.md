@@ -9,10 +9,14 @@ updated: 2026-09-09
 
 # finance.billing.fact_referral_charge
 
-> [!danger] The grain is UNCONFIRMED
+> [!CAUTION]
+> **The grain is UNCONFIRMED**
+>
 > The vault establishes that `ipr` carries `fin_customer_id`, `lead_id` and `move_in` on one row, and that 99.28% of live rows carry both keys. **It does not establish whether one row is one charge, one charge period, or one move-in.** Test **T-10** must profile the grain before this is built. **Do not guess the key: a wrong grain here double counts every downstream billing figure.**
 
-> [!warning] Not built · most columns are PLACEHOLDERS
+> [!WARNING]
+> **Not built · most columns are PLACEHOLDERS**
+>
 > DDL: [08-finance-billing.sql](../ddl/08-finance-billing.sql) · `STATUS: NOT EXECUTED`. See [Table Specifications](Table%20Specifications.md).
 >
 > `main.prod_fin_ipr_ipr.ipr` is **not in the Dynamics GP metadata reference.** Only the columns the spine validation touched are confirmed: `fin_customer_id`, `lead_id`, `move_in`, `gp_invoice_num`, `salesforce_id`, `customer_billing_id`, `business_unit_id`, `begin_date`, `end_date`, `family_file_id`. **Every column marked PROFILE below must be replaced from a `DESCRIBE` before a line of load code is written.**
@@ -22,7 +26,9 @@ updated: 2026-09-09
 > DESCRIBE TABLE EXTENDED main.prod_fin_ipr_ipr.ipr_invoice;
 > ```
 
-> [!info] Nothing in this schema is named revenue
+> [!NOTE]
+> **Nothing in this schema is named revenue**
+>
 > Referral charges are **billing activity**. Recognised revenue is what posts to the general ledger and lives in [fact_gl_posting](fact_gl_posting.md). *"The moment a column here is called revenue, someone will reconcile it against the income statement and it will not tie — because these two measure different things at different times, not because either is wrong."*
 
 | | |

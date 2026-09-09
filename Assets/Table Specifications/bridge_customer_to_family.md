@@ -10,7 +10,9 @@ updated: 2026-09-09
 
 # finance.identity.bridge_customer_to_family
 
-> [!warning] Not built, and mostly unprofiled
+> [!WARNING]
+> **Not built, and mostly unprofiled**
+>
 > DDL: [05-finance-identity.sql](../ddl/05-finance-identity.sql) · `STATUS: NOT EXECUTED`. Its source, `main.prod_fin_ipr_ipr.ipr`, is **not in the GP metadata reference**. Only the columns named in the spine validation are confirmed; the rest are marked **PROFILE** — placeholders to be replaced by a `DESCRIBE`, not assertions. Blocked on **T-10** and **T-11**.
 
 | | |

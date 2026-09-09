@@ -9,7 +9,9 @@ updated: 2026-09-09
 
 # common.calendar.dim_fiscal_calendar
 
-> [!warning] Not built
+> [!WARNING]
+> **Not built**
+>
 > DDL: [03-common-calendar.sql](../ddl/03-common-calendar.sql) · `STATUS: NOT EXECUTED`. See [Table Specifications](Table%20Specifications.md).
 
 | | |
