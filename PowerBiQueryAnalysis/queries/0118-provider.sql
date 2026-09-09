@@ -1,0 +1,82 @@
+-- Power BI query shape 118 of 663, from workspace_jf.landscape.qh.
+-- Not a schema probe: this shape reads data and returns rows.
+--
+-- Executions            528
+-- Distinct texts        1 (same query, different literals or projection)
+-- Rows read             22,449,836
+-- Rows returned         23,140,593
+-- Avg duration          2,287 ms
+-- Power BI datasets     none recorded
+-- Tables                prod_homecare_actransactional_organization.provider
+--
+-- Verbatim as executed; no Power BI envelope to strip.
+
+select `providerid`,
+    `profilefranchisename`,
+    `addon`,
+    `modifiedon`,
+    `address`,
+    `carecoordinatoruserid`,
+    `agingcareprofilepage`,
+    `warmtransferphonenumber`,
+    `warmtransferafterhoursendtime`,
+    `profilemissionstatement`,
+    `profiletrademarkagencydetails`,
+    `modifiedby`,
+    `name`,
+    `providerlogo`,
+    `sysstarttime`,
+    `sfrecordid`,
+    `warmtransferexternalcallcenter`,
+    `profileextracaregivertraining`,
+    `datefounded`,
+    `profilefranchiselocation`,
+    `freetrialexpirationdate`,
+    `createdby`,
+    `warmtransferendtime`,
+    `primaryphone`,
+    `warmtransferafterhoursphonenumber`,
+    `rate`,
+    `zipaddon`,
+    `profilelocalserviceareanickname`,
+    `warmtransferafterhourstimezoneoffset`,
+    `profileownersname`,
+    `website`,
+    `warmtransferafterhoursphoneextension`,
+    `primaryphonetypeid`,
+    `providerreferralratelimitid`,
+    `profiledescribecaregivers`,
+    `minimumfee`,
+    `warmtransferafterhoursphonetypeid`,
+    `slppcreditaccountid`,
+    `postalcode`,
+    `nowarmtransferallowed`,
+    `excludebillingreminders`,
+    `reviewedbillingperiodid`,
+    `orgid`,
+    `postalcodeid`,
+    `billingtypeid`,
+    `warmtransfertimezoneoffset`,
+    `deleted`,
+    `createdon`,
+    `accountspecialistuserid`,
+    `hcamuserid`,
+    `warmtransferafterhoursstarttime`,
+    `sysendtime`,
+    `profilesummarydescription`,
+    `warmtransferphonetypeid`,
+    `providerstatustypeid`,
+    `address2`,
+    `profiledescription`,
+    `freetrial`,
+    `providerorganizationid`,
+    `activationon`,
+    `ispace`,
+    `profilesupplieddescription`,
+    `warmtransferphoneextension`,
+    `warmtransferstarttime`,
+    `displayorganizationlogo`,
+    `fax`,
+    `_fivetran_deleted`,
+    `_fivetran_synced`
+from `main`.`prod_homecare_actransactional_organization`.`provider`
